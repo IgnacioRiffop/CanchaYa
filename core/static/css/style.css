@@ -1,0 +1,554 @@
+/* -----------------------------
+   GENERAL
+------------------------------ */
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #ffffff;
+  color: #333;
+  overflow-x: hidden;
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* -----------------------------
+   NAVBAR (Header Mejorado)
+------------------------------ */
+.navbar {
+  background: linear-gradient(90deg, #43b46f 0%, #28a745 100%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 0.8rem 1rem;
+  transition: all 0.3s ease-in-out;
+  z-index: 1000;
+}
+
+.navbar.scrolled {
+  background: #2d9b5f;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: #ffffff !important;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-brand i {
+  color: #ffffff;
+  font-size: 1.5rem;
+}
+
+.navbar-brand:hover {
+  opacity: 0.9;
+}
+
+.navbar-nav .nav-link {
+  color: #f8f9fa !important;
+  font-weight: 500;
+  font-size: 1.05rem;
+  transition: color 0.2s ease-in-out, transform 0.2s ease-in-out;
+  margin-left: 1rem;
+  position: relative;
+}
+
+.navbar-nav .nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background-color: #ffffff;
+  transition: width 0.25s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover::after {
+  width: 100%;
+}
+
+.navbar-nav .nav-link:hover {
+  transform: translateY(-2px);
+}
+
+/* Botón “Iniciar Sesión” */
+.navbar .btn-light {
+  background-color: #ffffff;
+  color: #28a745;
+  border-radius: 50px;
+  font-weight: 600;
+  padding: 0.4rem 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease-in-out;
+}
+
+.navbar .btn-light:hover {
+  background-color: #e9f8ee;
+  transform: translateY(-1px);
+}
+
+/* Icono de menú hamburguesa */
+.navbar-toggler {
+  border: none;
+  color: #fff;
+}
+
+.navbar-toggler:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* -----------------------------
+   BOTONES
+------------------------------ */
+.btn-primary {
+  background-color: #28a745;
+  border: none;
+  transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: #23963f;
+}
+
+/* -----------------------------
+   FOOTER
+------------------------------ */
+footer {
+  background-color: #f8f9fa;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+/* -----------------------------
+   RESPONSIVE DESIGN
+------------------------------ */
+
+/* Tablet (pantallas medianas) */
+@media (max-width: 992px) {
+  .navbar-brand {
+    font-size: 1.5rem;
+  }
+
+  .navbar-nav .nav-link {
+    font-size: 1rem;
+  }
+
+  footer {
+    font-size: 0.9rem;
+  }
+}
+
+/* Móvil (pantallas pequeñas) */
+@media (max-width: 576px) {
+  .navbar {
+    padding: 0.6rem 1rem;
+  }
+
+  .navbar-brand {
+    font-size: 1.3rem;
+  }
+
+  .btn {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  main {
+    padding: 1.5rem;
+  }
+
+  footer {
+    padding: 1rem;
+  }
+}
+
+
+/* -----------------------------
+   HERO SECTION
+------------------------------ */
+.hero {
+  background: linear-gradient(180deg, #f9fdf9 0%, #ffffff 100%);
+  border-bottom: 1px solid #e6f5ea;
+}
+
+.hero h1 {
+  color: #2d9b5f;
+  font-size: 2.3rem;
+}
+
+.hero .btn-success {
+  background-color: #28a745;
+  border: none;
+  transition: all 0.3s ease-in-out;
+}
+
+.hero .btn-success:hover {
+  background-color: #23963f;
+  transform: translateY(-2px);
+}
+
+/* -----------------------------
+   HOW IT WORKS
+------------------------------ */
+.how-it-works {
+  background-color: #f8fdf9;
+  padding: 3rem 0;
+  border-radius: 10px;
+}
+
+.how-it-works i {
+  font-size: 1.2rem;
+}
+
+/* -----------------------------
+   FEATURED COURTS
+------------------------------ */
+.featured-courts {
+  padding: 2rem 0;
+}
+
+.court-card {
+  background-color: #ffffff;
+  border: 1px solid #eaeaea;
+  transition: all 0.3s ease-in-out;
+}
+
+.court-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+.court-img {
+  width: 90px;
+  height: 70px;
+  object-fit: cover;
+}
+
+/* -----------------------------
+   BOTÓN “VER MÁS”
+------------------------------ */
+.btn-outline-success {
+  border: 2px solid #28a745;
+  font-weight: 600;
+  transition: all 0.3s ease-in-out;
+}
+
+.btn-outline-success:hover {
+  background-color: #28a745;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* -----------------------------
+   RESPONSIVE AJUSTES INDEX
+------------------------------ */
+@media (max-width: 768px) {
+  .court-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .court-img {
+    width: 100%;
+    height: 160px;
+    margin-bottom: 1rem;
+  }
+
+  .court-card a {
+    width: 100%;
+  }
+}
+
+
+/* -----------------------------
+   CONTACTO PAGE
+------------------------------ */
+.hero-contacto {
+  background: linear-gradient(180deg, #f9fdf9 0%, #ffffff 100%);
+}
+
+.contacto-form {
+  padding: 2rem 0;
+}
+
+.contacto-form .card {
+  background-color: #ffffff;
+  border: 1px solid #eaeaea;
+  transition: all 0.3s ease-in-out;
+}
+
+.contacto-form .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.05);
+}
+
+.contacto-form .form-control {
+  border: 1px solid #d8e9dc;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.contacto-form .form-control:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.1rem rgba(40, 167, 69, 0.2);
+}
+
+.contacto-form button {
+  border-radius: 50px;
+  font-weight: 600;
+  transition: all 0.3s ease-in-out;
+}
+
+.contacto-form button:hover {
+  transform: translateY(-2px);
+  background-color: #23963f;
+}
+
+/* Información lateral */
+.info-card {
+  background-color: #f9fdf9;
+}
+
+.info-card i {
+  width: 25px;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .contacto-form .card {
+    padding: 2rem;
+  }
+
+  .info-card {
+    text-align: center;
+  }
+
+  .info-card .d-flex {
+    justify-content: center;
+  }
+}
+/* -----------------------------
+   PROMOCIONES PAGE
+------------------------------ */
+.hero-promos {
+  background: linear-gradient(90deg, #43b46f 0%, #28a745 100%);
+  color: #fff;
+}
+
+.hero-promos p {
+  max-width: 700px;
+  margin: 0 auto;
+  opacity: 0.9;
+}
+
+/* Tarjetas de promoción */
+.promo-card {
+  background-color: #fff;
+  border: 1px solid #eaeaea;
+  transition: all 0.3s ease-in-out;
+}
+
+.promo-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.1);
+}
+
+/* Botón de copiar */
+.promo-card button {
+  font-weight: 600;
+  transition: all 0.3s ease-in-out;
+}
+
+.promo-card button:hover {
+  background-color: #28a745;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-promos h1 {
+    font-size: 1.8rem;
+  }
+  .promo-card {
+    margin-bottom: 1rem;
+  }
+}
+/* -----------------------------
+   REGISTRO PAGE
+------------------------------ */
+.registro {
+  background: linear-gradient(180deg, #f9fdf9 0%, #ffffff 100%);
+}
+
+.registro .card {
+  background-color: #ffffff;
+  border: 1px solid #eaeaea;
+  transition: all 0.3s ease-in-out;
+}
+
+.registro .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 16px rgba(0, 0, 0, 0.05);
+}
+
+.registro .form-control {
+  border-radius: 10px;
+  border: 1px solid #d8e9dc;
+  padding: 0.75rem 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.registro .form-control:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.1rem rgba(40, 167, 69, 0.2);
+}
+
+.registro button {
+  transition: all 0.3s ease-in-out;
+}
+
+.registro button:hover {
+  background-color: #23963f;
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .registro {
+    padding-top: 2rem;
+  }
+  .registro .card {
+    padding: 2rem;
+  }
+}
+
+
+/* ===========================
+   🔍 MÓDULO: CANCHAS
+=========================== */
+
+body {
+  background-color: #f8f9fa;
+}
+
+/* 🔍 Barra de filtros */
+.filter-bar {
+  flex-wrap: nowrap; /* 🟢 Filtros en una sola línea */
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.filter-bar .filter-input {
+  width: 180px;
+  border-radius: 2rem;
+  border: 1px solid #ccc;
+  padding: 0.6rem 1.2rem;
+  transition: 0.3s;
+}
+
+.filter-bar .filter-input:focus {
+  border-color: #198754;
+  box-shadow: 0 0 5px rgba(25,135,84,0.4);
+}
+
+/* 🏟️ Tarjetas de canchas */
+.court-card {
+  transition: all 0.3s ease-in-out;
+}
+
+.hover-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+
+.court-img {
+  width: 160px;
+  height: 100px;
+  object-fit: cover;
+}
+
+/* ✅ Botón */
+.btn-success {
+  background-color: #198754;
+  border: none;
+  font-weight: 600;
+}
+
+.btn-success:hover {
+  background-color: #157347;
+}
+
+/* 💻 Responsive */
+@media (max-width: 992px) {
+  .filter-bar {
+    flex-wrap: wrap; /* 🔁 Se apilan en pantallas pequeñas */
+  }
+}
+
+@media (max-width: 768px) {
+  .court-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .court-img {
+    width: 100%;
+    height: 160px;
+    margin-bottom: 1rem;
+  }
+
+  .btn-success {
+    width: 100%;
+  }
+}
+/* ===========================
+   👤 MENÚ DE USUARIO LOGUEADO
+=========================== */
+
+.user-avatar {
+  width: 35px;
+  height: 35px;
+  object-fit: cover;
+  border: 2px solid #fff;
+  transition: 0.2s;
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
+  border-color: #198754;
+}
+
+/* Dropdown */
+.dropdown-menu {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.dropdown-item {
+  font-size: 0.95rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+}
+
+.dropdown-item:hover {
+  background-color: #f1fdf4;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

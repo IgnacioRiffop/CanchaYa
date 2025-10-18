@@ -1,8 +1,186 @@
 {% extends 'core/base.html' %}
+{% block title %}Inicio | CanchaYa{% endblock %}
 
 {% block contenido %}
-  <div class="text-center">
-    <h1>Bienvenido a CanchaYa ⚽</h1>
-    <p>Reserva tu cancha rápida y fácilmente.</p>
+<br>
+<!-- 🔄 CARRUSEL PRINCIPAL -->
+<div class="carousel-wrapper mb-5 shadow-sm rounded-4">
+  <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+    <div class="carousel-inner">
+
+      <!-- Imagen 1 -->
+      <div class="carousel-item active">
+        <img src="https://www.parqueygrama.com/wp-content/uploads/2019/04/cancha-de-futbol.jpg" 
+             class="d-block w-100 carousel-img" alt="Cancha de fútbol">
+        <div class="carousel-caption d-flex justify-content-center align-items-center h-100">
+          <div class="caption-box text-center text-white p-4">
+            <h2 class="fw-bold mb-2">Encuentra tu cancha ideal ⚽</h2>
+            <p class="lead mb-0">Reserva rápido, juega fácil y disfruta con tus amigos.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Imagen 2 -->
+      <div class="carousel-item">
+        <img src="https://png.pngtree.com/background/20230426/original/pngtree-this-basketball-court-is-empty-and-at-night-it-is-hard-picture-image_2481045.jpg"
+             class="d-block w-100 carousel-img" alt="Cancha nocturna">
+        <div class="carousel-caption d-flex justify-content-center align-items-center h-100">
+          <div class="caption-box text-center text-white p-4">
+            <h2 class="fw-bold mb-2">Reserva 24/7 desde tu casa</h2>
+            <p class="lead mb-0">Sistema de reservas online totalmente automatizado.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Imagen 3 -->
+      <div class="carousel-item">
+        <img src="https://cloudfront-us-east-1.images.arcpublishing.com/copesa/2GPQRLHAZVCKDMKRYP5NL5YNT4.jpg"
+             class="d-block w-100 carousel-img" alt="Jugadores celebrando">
+        <div class="carousel-caption d-flex justify-content-center align-items-center h-100">
+          <div class="caption-box text-center text-white p-4">
+            <h2 class="fw-bold mb-2">Vive la experiencia CanchaYa</h2>
+            <p class="lead mb-0">Canchas certificadas y con la mejor atención.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controles -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon"></span>
+    </button>
   </div>
+</div>
+
+<!-- 🏟️ Hero principal -->
+<section class="hero text-center mb-5">
+  <div class="container py-5">
+    <h1 class="fw-bold mb-3">¡Reservar nunca había sido tan fácil! ⚽</h1>
+    <p class="lead text-muted mb-4">
+      Encuentra tu cancha ideal, elige horario y juega sin complicaciones.
+    </p>
+    <a href="#" class="btn btn-success btn-lg px-4">Reservar ahora</a>
+  </div>
+</section>
+
+<!-- 💡 Sección: Cómo funciona -->
+<section class="how-it-works text-center mb-5">
+  <div class="container">
+    <h2 class="fw-bold mb-4 text-success">¿Cómo funciona?</h2>
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <ol class="text-start fs-5 list-unstyled">
+          <li><i class="fa-solid fa-user-check me-2 text-success"></i> Inicia sesión</li>
+          <li><i class="fa-solid fa-futbol me-2 text-success"></i> Elige cancha y horario</li>
+          <li><i class="fa-solid fa-credit-card me-2 text-success"></i> Realiza el pago</li>
+          <li><i class="fa-solid fa-check-circle me-2 text-success"></i> Recibe confirmación y disfruta tu turno</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 🌟 Sección: Canchas destacadas -->
+<section class="featured-courts mb-5">
+  <div class="container">
+    <h2 class="fw-bold text-center mb-4">Canchas destacadas</h2>
+    <div class="row justify-content-center g-4">
+
+      <!-- Tarjeta 1 -->
+      <div class="col-md-6 col-lg-5">
+        <div class="court-card d-flex align-items-center p-3 shadow-sm rounded-4">
+          <img src="https://www.encancha.cl/resizer/v2/estadio-del-real-madrid-JN4N7WE75REIJKEGGSMKFR2SLI.jpg?auth=2e94f96d440720cbfde049a80a4d19027c805032bdf06e9991c9b8ed47dc8d7b&smart=true&width=800&height=533&quality=70" 
+               alt="Cancha de fútbol" class="court-img rounded-3 me-3">
+          <div class="flex-grow-1">
+            <h5 class="mb-1 fw-bold">Complejo deportivo El Peral</h5>
+            <p class="text-muted mb-1 small">Av. Concha y Toro 3710, Puente Alto</p>
+            <p class="text-secondary small">Fútbol 11</p>
+          </div>
+          <a href="#" class="btn btn-success rounded-pill px-3">Reservar</a>
+        </div>
+      </div>
+
+      <!-- Tarjeta 2 -->
+      <div class="col-md-6 col-lg-5">
+        <div class="court-card d-flex align-items-center p-3 shadow-sm rounded-4">
+          <img src="https://wooarchitects.com/wp-content/uploads/2025/05/WOO-architects-Camp-Nou-Stadium-Barcelona.png"
+               alt="Cancha de padel" class="court-img rounded-3 me-3">
+          <div class="flex-grow-1">
+            <h5 class="mb-1 fw-bold">Club Suizo</h5>
+            <p class="text-muted mb-1 small">Cerro de Pasco 1522, Ñuñoa</p>
+            <p class="text-secondary small">Fútbol 11</p>
+          </div>
+          <a href="#" class="btn btn-success rounded-pill px-3">Reservar</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón Ver más -->
+    <div class="text-center mt-4">
+      <a href="#" class="btn btn-outline-success px-4 py-2 rounded-pill">Ver más</a>
+    </div>
+  </div>
+</section>
+
 {% endblock %}
+
+
+{% block css %}
+<style>
+  /* 🎯 Contenedor externo controla el borde */
+  .carousel-wrapper {
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+
+  .carousel-img {
+    height: 550px;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* 💡 Caja cuadrada translúcida */
+  .caption-box {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    width: 60%;
+    max-width: 500px;
+    min-width: 280px;
+    border-radius: 0; /* cuadrado puro */
+  }
+
+  .caption-box h2, 
+  .caption-box p {
+    color: #fff;
+  }
+
+  /* 📱 Responsive */
+  @media (max-width: 768px) {
+    .carousel-img {
+      height: 300px;
+    }
+    .caption-box {
+      width: 80%;
+      padding: 1.2rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .carousel-img {
+      height: 220px;
+    }
+    .caption-box h2 {
+      font-size: 1.2rem;
+    }
+    .caption-box p {
+      font-size: 0.9rem;
+    }
+  }
+</style>
+{% endblock %}
+
+
+

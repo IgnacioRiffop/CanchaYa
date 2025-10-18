@@ -63,6 +63,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.datos_usuario',
             ],
         },
     },
@@ -82,15 +83,14 @@ DATABASES = {
     }
 }
 """
+import oracledb
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.oracle',
-        'NAME': 'ORCL',        # Tu SID o service name de Oracle
-        'USER': 'USUARIO',      # Usuario de Oracle
-        'PASSWORD': '12345',   # Contraseña del usuario
-        'HOST': 'localhost',   # Dirección del servidor Oracle
-        'PORT': '1521',        # Puerto del listener
+        'NAME': 'localhost:1521/orcl',
+        'USER': 'fabian',
+        'PASSWORD': 'fabian123',
     }
 }
 
@@ -132,3 +132,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "core" / "static",
+]
+
+
+# --- CONFIGURACIÓN DE EMAIL ---
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'canchasya.duoc@gmail.com'
+EMAIL_HOST_PASSWORD = 'hxum oonu mtwz krno'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

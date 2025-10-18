@@ -1,0 +1,158 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Contacto | CanchaYa{% endblock %}
+
+{% block contenido %}
+
+<!-- Hero -->
+<section class="hero-contacto text-center py-5 mb-4">
+  <div class="container">
+    <h1 class="fw-bold text-success mb-3">Contáctanos</h1>
+    <p class="text-muted fs-5">
+      ¿Tienes dudas, sugerencias o quieres más información?  
+      Escríbenos y te responderemos a la brevedad ⚽
+    </p>
+  </div>
+</section>
+
+<!-- Formulario -->
+<section class="contacto-form mb-5">
+  <div class="container">
+    <div class="row justify-content-center g-4">
+      
+      <!-- Formulario -->
+      <div class="col-lg-7">
+        <div class="card shadow-sm border-0 p-4 rounded-4">
+          <h4 class="fw-bold mb-4 text-success">Envíanos un mensaje</h4>
+
+          <form id="formContacto">
+            <div class="mb-3">
+              <label for="nombre" class="form-label fw-semibold">Nombre completo</label>
+              <input type="text" class="form-control" id="nombre" placeholder="Ej: Benjamin Gonzalez Moraga">
+            </div>
+
+            <div class="mb-3">
+              <label for="correo" class="form-label fw-semibold">Correo electrónico</label>
+              <input type="email" class="form-control" id="correo" placeholder="Ej: b.gonzalez@duocuc.cl">
+            </div>
+
+            <div class="mb-3">
+              <label for="mensaje" class="form-label fw-semibold">Mensaje</label>
+              <textarea class="form-control" id="mensaje" rows="5" maxlength="200" placeholder="Escribe tu mensaje aquí (máx. 200 caracteres)..."></textarea>
+              <small id="contador" class="text-muted d-block text-end mt-1">0 / 200</small>
+            </div>
+
+            <button type="submit" class="btn btn-success px-4">Enviar mensaje</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Información lateral -->
+      <div class="col-lg-4">
+        <div class="card info-card shadow-sm border-0 p-4 rounded-4">
+          <h4 class="fw-bold mb-4 text-success">Información de contacto</h4>
+
+          <p class="mb-2"><i class="fa-solid fa-location-dot text-success me-2"></i> Santiago, Chile</p>
+          <p class="mb-2"><i class="fa-solid fa-phone text-success me-2"></i> +56 9 8765 4321</p>
+          <p class="mb-3"><i class="fa-solid fa-envelope text-success me-2"></i> canchasya.duoc@gmail.com</p>
+
+          <hr>
+
+          <h6 class="fw-bold mb-3">Síguenos</h6>
+          <div class="d-flex gap-3 fs-4">
+            <a href="#" class="text-success"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" class="text-success"><i class="fa-brands fa-facebook"></i></a>
+            <a href="#" class="text-success"><i class="fa-brands fa-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block js %}
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  const form = document.getElementById('formContacto');
+  const nombre = document.getElementById('nombre');
+  const correo = document.getElementById('correo');
+  const mensaje = document.getElementById('mensaje');
+  const contador = document.getElementById('contador');
+
+  // Contador de caracteres en tiempo real
+  mensaje.addEventListener('input', () => {
+    contador.textContent = `${mensaje.value.length} / 200`;
+    if (mensaje.value.length >= 200) contador.classList.add('text-danger');
+    else contador.classList.remove('text-danger');
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const nombreValor = nombre.value.trim();
+    const correoValor = correo.value.trim();
+    const mensajeValor = mensaje.value.trim();
+
+    // Validaciones básicas
+    if (!nombreValor || !correoValor || !mensajeValor) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'Por favor completa todos los campos antes de enviar.',
+        confirmButtonColor: '#28a745'
+      });
+      return;
+    }
+
+    // Validación de longitud del nombre
+    if (nombreValor.length < 5) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Nombre demasiado corto',
+        text: 'El nombre debe tener al menos 5 caracteres.',
+        confirmButtonColor: '#28a745'
+      });
+      return;
+    }
+
+    // Validación de formato de correo
+    const regexCorreo = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    if (!regexCorreo.test(correoValor)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Correo inválido',
+        text: 'Por favor ingresa un correo electrónico válido.',
+        confirmButtonColor: '#28a745'
+      });
+      return;
+    }
+
+    // Validación de longitud del mensaje
+    if (mensajeValor.length < 20) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Mensaje muy corto',
+        text: 'El mensaje debe tener al menos 20 caracteres.',
+        confirmButtonColor: '#28a745'
+      });
+      return;
+    }
+
+    // Si todo está correcto
+    Swal.fire({
+      icon: 'success',
+      title: '¡Mensaje enviado!',
+      text: 'Gracias por contactarnos, te responderemos pronto ⚽',
+      confirmButtonColor: '#28a745'
+    });
+
+    form.reset();
+    contador.textContent = '0 / 200';
+  });
+</script>
+{% endblock %}

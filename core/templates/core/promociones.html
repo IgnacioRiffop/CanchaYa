@@ -1,0 +1,97 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Promociones | CanchaYa{% endblock %}
+
+{% block contenido %}
+
+<!-- Hero -->
+<section class="hero-promos text-center text-white py-5 mb-5">
+  <div class="container">
+    <h1 class="fw-bold mb-3">🎉 ¡Aprovecha nuestras promociones!</h1>
+    <p class="lead">
+      Descuentos exclusivos para nuestros jugadores.  
+      Usa los códigos y obtén beneficios en tus próximas reservas.
+    </p>
+  </div>
+</section>
+
+<!-- Lista de promociones -->
+<section class="promociones mb-5">
+  <div class="container">
+    <div class="row justify-content-center g-4">
+
+      <!-- PROMO 1 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="promo-card shadow-sm p-4 rounded-4 h-100">
+          <div class="text-center mb-3">
+            <i class="fa-solid fa-ticket text-success fa-2x"></i>
+          </div>
+          <h5 class="fw-bold text-success mb-2 text-center">Código promocional especial</h5>
+          <p class="text-muted text-center mb-3">
+            Usa el código <strong>DEPOTREX</strong> y recibe un <strong>10% de descuento</strong> al pagar tu reserva.
+          </p>
+          <div class="text-center">
+            <button class="btn btn-outline-success rounded-pill px-4" onclick="copiarCodigo('DEPOTREX')">
+              Copiar código
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROMO 2 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="promo-card shadow-sm p-4 rounded-4 h-100">
+          <div class="text-center mb-3">
+            <i class="fa-solid fa-moon text-success fa-2x"></i>
+          </div>
+          <h5 class="fw-bold text-success mb-2 text-center">Noche deportiva 🌙</h5>
+          <p class="text-muted text-center mb-3">
+            Con el código <strong>NOCHES20</strong> obtienes un <strong>20% de descuento</strong> en reservas después de las 21:00.
+          </p>
+          <div class="text-center">
+            <button class="btn btn-outline-success rounded-pill px-4" onclick="copiarCodigo('NOCHES20')">
+              Copiar código
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROMO 3 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="promo-card shadow-sm p-4 rounded-4 h-100">
+          <div class="text-center mb-3">
+            <i class="fa-solid fa-calendar-week text-success fa-2x"></i>
+          </div>
+          <h5 class="fw-bold text-success mb-2 text-center">Fin de semana ganador 🏆</h5>
+          <p class="text-muted text-center mb-3">
+            Usa el código <strong>FINDES10</strong> y recibe un <strong>20% de descuento</strong> en reservas durante los fines de semana.
+          </p>
+          <div class="text-center">
+            <button class="btn btn-outline-success rounded-pill px-4" onclick="copiarCodigo('FINDES10')">
+              Copiar código
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  function copiarCodigo(codigo) {
+    navigator.clipboard.writeText(codigo);
+    Swal.fire({
+      icon: 'success',
+      title: '¡Código copiado!',
+      text: `Has copiado el código ${codigo}. ¡Aplícalo al momento de reservar!`,
+      confirmButtonColor: '#28a745'
+    });
+  }
+</script>
+{% endblock %}

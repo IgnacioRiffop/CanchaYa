@@ -1,0 +1,149 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Registro | CanchaYa{% endblock %}
+
+{% block contenido %}
+
+<section class="registro py-5 fade-in">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-7 col-lg-5">
+        <div class="card border-0 shadow-sm p-4 rounded-4">
+          <h3 class="text-center fw-bold text-success mb-4">Crear una cuenta</h3>
+
+          <form id="formRegistro" method="POST" action="{% url 'registro' %}">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label for="nombre" class="form-label fw-semibold">Nombre</label>
+              <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ej: Daniel" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="apellido" class="form-label fw-semibold">Apellido</label>
+              <input type="text" class="form-control" id="apellido" name="apellido" placeholder="Ej: Tapia Gálvez" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="email" class="form-label fw-semibold">Correo electrónico</label>
+              <input type="email" class="form-control" id="email" name="email" placeholder="Ej: usuario@duocuc.cl" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label fw-semibold">Contraseña</label>
+              <input type="password" class="form-control" id="password" name="password" placeholder="********" required>
+            </div>
+
+            <div class="mb-4">
+              <label for="confirmar" class="form-label fw-semibold">Confirmar contraseña</label>
+              <input type="password" class="form-control" id="confirmar" name="confirmar" placeholder="********" required>
+            </div>
+
+            <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold">Registrarse</button>
+
+            <div class="text-center mt-3 small">
+              ¿Ya tienes cuenta?
+              <a href="#" class="text-success fw-semibold" data-bs-toggle="modal" data-bs-target="#loginModal">Inicia sesión</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.getElementById('formRegistro').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const nombre = document.getElementById('nombre').value.trim();
+  const apellido = document.getElementById('apellido').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const pass = document.getElementById('password').value.trim();
+  const conf = document.getElementById('confirmar').value.trim();
+
+  // Validaciones SweetAlert
+  if (!nombre || !apellido || !email || !pass || !conf) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Campos incompletos',
+      text: 'Por favor completa todos los campos.',
+      confirmButtonColor: '#28a745'
+    });
+    return;
+  }
+
+  if (nombre.length < 2 || apellido.length < 2) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Nombre o apellido muy cortos',
+      text: 'Cada uno debe tener al menos 2 caracteres.',
+      confirmButtonColor: '#28a745'
+    });
+    return;
+  }
+
+  const regexEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  if (!regexEmail.test(email)) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Correo inválido',
+      text: 'Por favor ingresa un correo válido.',
+      confirmButtonColor: '#28a745'
+    });
+    return;
+  }
+
+  if (pass.length < 6) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Contraseña débil',
+      text: 'Debe tener al menos 6 caracteres.',
+      confirmButtonColor: '#28a745'
+    });
+    return;
+  }
+
+  if (pass !== conf) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Contraseñas no coinciden',
+      text: 'Asegúrate de que ambas sean iguales.',
+      confirmButtonColor: '#28a745'
+    });
+    return;
+  }
+
+  // Confirmación antes de enviar
+  Swal.fire({
+    title: '¿Crear cuenta?',
+    text: 'Verifica tus datos antes de continuar.',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, registrarme',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#28a745',
+    cancelButtonColor: '#d33'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: 'Procesando...',
+        text: 'Guardando tu cuenta en la base de datos.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      setTimeout(() => {
+        document.getElementById('formRegistro').submit();
+      }, 700);
+    }
+  });
+});
+</script>
+{% endblock %}
