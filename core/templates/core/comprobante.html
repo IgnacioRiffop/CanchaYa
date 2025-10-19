@@ -1,0 +1,81 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Comprobante | CanchaYa{% endblock %}
+
+{% block contenido %}
+<main class="fade-in py-5">
+  <div class="container text-center">
+
+    <!-- Título -->
+    <h1 class="fw-bold text-success mb-2">¡Ya está todo listo!</h1>
+    <p class="text-muted mb-5">En los próximos minutos te llegará un correo con los detalles de tu reserva</p>
+
+    <div class="card shadow-sm mx-auto" style="max-width: 800px;">
+      <div class="card-body">
+
+        <div class="row align-items-center text-start">
+          <!-- Información de la cancha -->
+          <div class="col-md-6">
+            <p><strong>Complejo deportivo El Peral</strong></p>
+            <p class="mb-1 text-muted small">Av. Concha y Toro 0190, Puente Alto</p>
+            <p class="mb-1 text-muted small">Fútbol 11</p>
+            <p class="mb-1"><strong>Fecha:</strong> 08/10/2025</p>
+            <p class="mb-1"><strong>Horario:</strong> 14:00 - 15:00</p>
+            <p class="mb-1"><strong>Precio:</strong> $29.990</p>
+          </div>
+
+          <!-- Imagen -->
+          <div class="col-md-6 text-center">
+            <img src="https://www.parqueygrama.com/wp-content/uploads/2019/04/cancha-de-futbol.jpg" 
+                 alt="Cancha" class="img-fluid rounded shadow-sm" 
+                 style="max-height: 180px; object-fit: cover;">
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Equipamiento -->
+        <h5 class="fw-bold mb-3 text-start">Equipamiento</h5>
+        <table class="table table-sm table-bordered text-center align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Artículo</th>
+              <th>Cantidad</th>
+              <th>Precio Unitario</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Balón</td>
+              <td>1 Unidad</td>
+              <td>$4.990</td>
+              <td>$4.990</td>
+            </tr>
+            <tr>
+              <td>Petos</td>
+              <td>1 Set</td>
+              <td>$10.990</td>
+              <td>$10.990</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Totales -->
+        <div class="text-end mt-3">
+          <p class="mb-1"><strong>Subtotal:</strong> $45.970</p>
+          <p class="mb-1 text-success"><strong>Descuento:</strong> $9.194</p>
+          <p class="mb-0 fs-5"><strong>Total:</strong> $36.776</p>
+        </div>
+
+        <!-- Botón -->
+        <div class="text-center mt-4">
+          <a href="{% url 'index' %}" class="btn btn-success px-4">Aceptar</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+{% endblock %}

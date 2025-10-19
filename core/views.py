@@ -308,3 +308,6 @@ def editar_perfil(request):
 
 def reserva(request):
     return render(request, 'core/reserva.html')
+
+def comprobante(request):
+    return render(request, 'core/comprobante.html')
