@@ -305,3 +305,6 @@ def editar_perfil(request):
 
     return JsonResponse({'ok': False, 'msg': 'Método inválido.'})
 
+
+def reserva(request):
+    return render(request, 'core/reserva.html')

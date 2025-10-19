@@ -1,0 +1,122 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Reserva | CanchaYa{% endblock %}
+
+{% block contenido %}
+
+<main class="fade-in py-5">
+  <div class="container">
+
+    <!-- Título -->
+    <div class="text-center mb-5">
+      <h1 class="fw-bold text-success">Confirmar Reserva</h1>
+      <p class="text-muted">Revisa los detalles antes de confirmar tu reserva</p>
+    </div>
+
+    <!-- Información de la cancha -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title mb-3">Detalles de la Cancha</h5>
+
+        <div class="row align-items-center">
+          <div class="col-md-4">
+            <img src="https://www.parqueygrama.com/wp-content/uploads/2019/04/cancha-de-futbol.jpg" alt="Cancha" class="img-fluid rounded shadow-sm" style="max-height: 140px; object-fit: cover;">
+          </div>
+          <div class="col-md-8">
+            <div class="row">
+              <div class="col-md-6">
+                <p><strong>Cancha:</strong> Complejo deportivo El Peral</p>
+                <p><strong>Ubicación:</strong> Av. Concha y Toro 3710, Puente Alto<</p>
+              </div>
+              <div class="col-md-6">
+
+                <p><strong>Día:</strong> <span id="dia">Sábado 19 de Octubre</span></p>
+                <p><strong>Hora:</strong> <span id="hora">18:00 - 19:00</span></p>
+                <p><strong>Precio Cancha:</strong> <span id="precio-cancha" class="fw-bold text-success">$29.990</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Equipamiento adicional -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title mb-4">Equipamiento Adicional</h5>
+
+        <!-- Balón -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <strong>Balón</strong><br>
+            <small class="text-muted">$4.990 c/u</small>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-success" onclick="cambiarCantidad('balon', -1)">−</button>
+            <span id="balon-cant" class="fw-bold">0</span>
+            <button class="btn btn-outline-success" onclick="cambiarCantidad('balon', 1)">+</button>
+          </div>
+        </div>
+
+        <!-- Petos -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <strong>Petos</strong><br>
+            <small class="text-muted">$1.000 c/u </small>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-success" onclick="cambiarCantidad('petos', -1)">−</button>
+            <span id="petos-cant" class="fw-bold">0</span>
+            <button class="btn btn-outline-success" onclick="cambiarCantidad('petos', 1)">+</button>
+          </div>
+        </div>
+
+        <!-- Conos -->
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <strong>Conos</strong><br>
+            <small class="text-muted">$1.000 c/u</small>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-success" onclick="cambiarCantidad('conos', -1)">−</button>
+            <span id="conos-cant" class="fw-bold">0</span>
+            <button class="btn btn-outline-success" onclick="cambiarCantidad('conos', 1)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen de pago -->
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title mb-4">Resumen de Pago</h5>
+
+        <div class="d-flex justify-content-between">
+          <p>Subtotal:</p>
+          <p id="subtotal" class="fw-bold">$0</p>
+        </div>
+        <div class="d-flex justify-content-between">
+          <p>Descuento:</p>
+          <p id="descuento" class="fw-bold text-success">$0</p>
+        </div>
+        <hr>
+        <div class="d-flex justify-content-between">
+          <h5>Total a Pagar:</h5>
+          <h5 id="total" class="fw-bold text-success">$0</h5>
+        </div>
+
+        <div class="text-center mt-4">
+          <button class="btn btn-success btn-lg px-5">Confirmar Reserva</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ✅ Cargar el JS según tu ruta -->
+<script src="{% static 'js/reserva.js' %}"></script>
+
+{% endblock %}

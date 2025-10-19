@@ -84,13 +84,21 @@ DATABASES = {
 }
 """
 import oracledb
+#DATABASES = {
+ #   'default': {
+  #      'ENGINE': 'django.db.backends.oracle',
+   #     'NAME': 'localhost:1521/orcl',
+    #    'USER': 'fabian',
+       # 'PASSWORD': 'fabian123',
+    #}
+#}
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.oracle',
-        'NAME': 'localhost:1521/orcl',
-        'USER': 'fabian',
-        'PASSWORD': 'fabian123',
+        'NAME': 'localhost:1521/orclpdb',  # No ORCL, sino orclpdb
+        'USER': 'canchaya',
+        'PASSWORD': '12345',
     }
 }
 
