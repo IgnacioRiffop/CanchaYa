@@ -1,0 +1,51 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Mi cuenta | CanchaYa{% endblock %}
+
+{% block contenido %}
+
+<main class="fade-in py-5">
+  <div class="container text-center">
+
+    <!-- Título -->
+    <h1 class="fw-bold text-success mb-4">Mi cuenta</h1>
+
+    <!-- Tarjeta de perfil -->
+    <div class="d-flex justify-content-center">
+      <div class="p-4 rounded-4" 
+           style="background-color: #e5e5e5; width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+
+        <form>
+          <div class="text-start mb-3">
+            <label class="fw-bold">Nombre</label>
+            <input type="text" class="form-control text-center rounded-pill" value="Fabián" readonly>
+          </div>
+
+          <div class="text-start mb-3">
+            <label class="fw-bold">Apellido</label>
+            <input type="text" class="form-control text-center rounded-pill" value="Bravo" readonly>
+          </div>
+
+          <div class="text-start mb-4">
+            <label class="fw-bold">Correo</label>
+            <input type="email" class="form-control text-center rounded-pill" value="fa.bravo@duocuc.cl" readonly>
+          </div>
+
+          <button type="button" class="btn btn-success w-100 rounded-pill fw-bold">
+            Modificar
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Historial -->
+    <div class="mt-5">
+      <h5 class="fw-bold">Historial de reservas</h5>
+      <button class="btn btn-success rounded-pill px-4 fw-bold mt-2">Ver más</button>
+    </div>
+
+  </div>
+</main>
+
+{% endblock %}
