@@ -1,0 +1,59 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Modificar cuenta | CanchaYa{% endblock %}
+
+{% block contenido %}
+
+<main class="fade-in py-5">
+  <div class="container">
+
+    <!-- Título -->
+    <div class="text-center mb-5">
+      <h1 class="fw-bold">Modificar datos</h1>
+    </div>
+
+    <!-- Formulario -->
+    <div class="d-flex justify-content-center">
+      <div class="p-4 rounded-4 shadow-sm" style="background-color: #e6e6e6; width: 320px;">
+
+        <form method="POST" action="{% url 'modificarCuenta' %}">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nombre</label>
+            <input type="text" name="nombre" class="form-control rounded-pill text-center" value="{{ user.first_name }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Apellido</label>
+            <input type="text" name="apellido" class="form-control rounded-pill text-center" value="{{ user.last_name }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Correo</label>
+            <input type="email" name="correo" class="form-control rounded-pill text-center" value="{{ user.email }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Contraseña</label>
+            <input type="password" name="password1" class="form-control rounded-pill text-center" placeholder="********">
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Repetir contraseña</label>
+            <input type="password" name="password2" class="form-control rounded-pill text-center" placeholder="********">
+          </div>
+
+          <div class="text-center">
+            <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold">Guardar</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+</main>
+
+{% endblock %}

@@ -314,3 +314,6 @@ def comprobante(request):
 
 def cuenta(request):
     return render(request, 'core/cuenta.html')
+
+def modificarCuenta(request):
+    return render(request, 'core/modificarCuenta.html')

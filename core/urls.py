@@ -16,4 +16,5 @@ urlpatterns = [
     path('reserva/', views.reserva, name='reserva'),
     path('comprobante/', views.comprobante, name='comprobante'),
     path('cuenta/', views.cuenta, name='cuenta'),
+    path('modificarCuenta/', views.modificarCuenta, name='modificarCuenta'),
 ]
