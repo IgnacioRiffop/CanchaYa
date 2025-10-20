@@ -1,0 +1,110 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Detalle de reserva | CanchaYa{% endblock %}
+
+{% block contenido %}
+
+<main class="fade-in py-5">
+  <div class="container">
+
+    <!-- Título -->
+    <div class="text-center mb-5">
+      <h1 class="fw-bold">Historial de reservas</h1>
+    </div>
+
+    <!-- Detalle -->
+    <div class="row justify-content-center align-items-start">
+      <div class="col-md-8">
+
+        <div class="d-flex justify-content-between align-items-start mb-4">
+          <div>
+            <h6 class="fw-bold mb-1">Complejo deportivo El Peral</h6>
+            <p class="text-muted mb-1">Av. Concha y Toro 0190, Puente Alto</p>
+            <p class="text-muted mb-1">Fútbol 11</p>
+            <p class="mb-1"><strong>Fecha:</strong> 08/10/2025</p>
+            <p class="mb-1"><strong>Horario:</strong> 14:00 - 15:00</p>
+            <p class="mb-1"><strong>Precio:</strong> $29.990</p>
+          </div>
+
+          <img src="https://www.parqueygrama.com/wp-content/uploads/2019/04/cancha-de-futbol.jpg"
+               alt="Cancha"
+               class="rounded shadow-sm"
+               style="width: 300px; height: 180px; object-fit: cover;">
+        </div>
+
+        <!-- Equipamiento -->
+        <h6 class="fw-bold mb-2">Equipamiento</h6>
+        <table class="table table-sm align-middle text-center" style="background-color: #e6e6e6;">
+          <thead class="table-light">
+            <tr>
+              <th>Artículo</th>
+              <th>Cantidad</th>
+              <th>Precio unitario</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Balón</td>
+              <td>1 Unidad</td>
+              <td>$4.990</td>
+              <td>$4.990</td>
+            </tr>
+            <tr>
+              <td>Petos</td>
+              <td>1 Set</td>
+              <td>$10.990</td>
+              <td>$10.990</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Totales -->
+        <div class="text-end mt-3">
+          <p class="mb-1"><strong>Subtotal:</strong> $45.970</p>
+          <p class="mb-1 text-success"><strong>Descuento:</strong> $9.194</p>
+          <p class="mb-0 fw-bold text-success"><strong>Total:</strong> $36.776</p>
+        </div>
+
+        <!-- Botón Cancelar -->
+        <div class="text-center mt-4">
+          <button class="btn btn-danger rounded-pill px-4 fw-bold" id="cancelarReserva">
+            Cancelar reserva
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Script SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.getElementById('cancelarReserva').addEventListener('click', function() {
+    Swal.fire({
+      title: '¿Cancelar esta reserva?',
+      text: 'Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#198754',
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'No, mantener'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Reserva cancelada',
+          text: 'Tu reserva fue cancelada exitosamente.',
+          confirmButtonColor: '#198754'
+        }).then(() => {
+          window.location.href = "{% url 'historialReserva' %}";
+        });
+      }
+    });
+  });
+</script>
+
+{% endblock %}
