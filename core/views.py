@@ -311,3 +311,6 @@ def reserva(request):
 
 def comprobante(request):
     return render(request, 'core/comprobante.html')
+
+def cuenta(request):
+    return render(request, 'core/cuenta.html')
