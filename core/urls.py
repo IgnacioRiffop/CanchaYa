@@ -17,4 +17,5 @@ urlpatterns = [
     path('comprobante/', views.comprobante, name='comprobante'),
     path('cuenta/', views.cuenta, name='cuenta'),
     path('modificarCuenta/', views.modificarCuenta, name='modificarCuenta'),
+    path('historialReserva/', views.historialReserva, name='historialReserva'),
 ]

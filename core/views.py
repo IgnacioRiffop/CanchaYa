@@ -317,3 +317,6 @@ def cuenta(request):
 
 def modificarCuenta(request):
     return render(request, 'core/modificarCuenta.html')
+
+def historialReserva(request):
+    return render(request, 'core/historialReserva.html')
