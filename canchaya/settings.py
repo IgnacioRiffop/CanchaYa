@@ -93,15 +93,28 @@ import oracledb
     #}
 #}
 
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.oracle',
         'NAME': 'localhost:1521/orclpdb',  # No ORCL, sino orclpdb
-        'USER': 'canchaya',
+        'USER': 'canchaya', 
         'PASSWORD': '12345',
     }
 }
+"""
 
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.oracle',
+        'NAME': 'ORCL',        # Tu SID o service name de Oracle
+        'USER': 'USUARIO',      # Usuario de Oracle
+        'PASSWORD': '12345',   # Contraseña del usuario
+        'HOST': 'localhost',   # Dirección del servidor Oracle
+        'PORT': '1521',        # Puerto del listener
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -153,3 +166,10 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'canchasya.duoc@gmail.com'
 EMAIL_HOST_PASSWORD = 'hxum oonu mtwz krno'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+

@@ -17,7 +17,7 @@ class Cancha(models.Model):
     id_cancha = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=50)
     direccion = models.CharField(max_length=150)
-    imagen = models.BinaryField(blank=True, null=True)
+    imagen = models.ImageField(upload_to='canchas/', blank=True, null=True)
     hora_inicio = models.TimeField()
     hora_fin = models.TimeField()
     tipo_cancha = models.ForeignKey(TipoCancha, on_delete=models.CASCADE, db_column='tipo_cancha_id_tipo_cancha')

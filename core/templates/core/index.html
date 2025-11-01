@@ -89,34 +89,21 @@
     <h2 class="fw-bold text-center mb-4">Canchas destacadas</h2>
     <div class="row justify-content-center g-4">
 
-      <!-- Tarjeta 1 -->
-      <div class="col-md-6 col-lg-5">
-        <div class="court-card d-flex align-items-center p-3 shadow-sm rounded-4">
-          <img src="https://www.encancha.cl/resizer/v2/estadio-del-real-madrid-JN4N7WE75REIJKEGGSMKFR2SLI.jpg?auth=2e94f96d440720cbfde049a80a4d19027c805032bdf06e9991c9b8ed47dc8d7b&smart=true&width=800&height=533&quality=70" 
-               alt="Cancha de fútbol" class="court-img rounded-3 me-3">
-          <div class="flex-grow-1">
-            <h5 class="mb-1 fw-bold">Complejo deportivo El Peral</h5>
-            <p class="text-muted mb-1 small">Av. Concha y Toro 3710, Puente Alto</p>
-            <p class="text-secondary small">Fútbol 11</p>
-          </div>
-          <a href="#" class="btn btn-success rounded-pill px-3">Reservar</a>
+  {% for cancha in canchas %}
+    <div class="col-md-6 col-lg-5">
+      <div class="court-card d-flex align-items-center p-3 shadow-sm rounded-4">
+        <img src="{{ cancha.imagen.url }}" 
+             alt="{{ cancha.nombre }}" 
+             class="court-img rounded-3 me-3">
+        <div class="flex-grow-1">
+          <h5 class="mb-1 fw-bold">{{ cancha.nombre }}</h5>
+          <p class="text-muted mb-1 small">{{ cancha.direccion }}</p>
+          <p class="text-secondary small">{{ cancha.tipo_cancha.nombre }}</p>
         </div>
-      </div>
-
-      <!-- Tarjeta 2 -->
-      <div class="col-md-6 col-lg-5">
-        <div class="court-card d-flex align-items-center p-3 shadow-sm rounded-4">
-          <img src="https://wooarchitects.com/wp-content/uploads/2025/05/WOO-architects-Camp-Nou-Stadium-Barcelona.png"
-               alt="Cancha de padel" class="court-img rounded-3 me-3">
-          <div class="flex-grow-1">
-            <h5 class="mb-1 fw-bold">Club Suizo</h5>
-            <p class="text-muted mb-1 small">Cerro de Pasco 1522, Ñuñoa</p>
-            <p class="text-secondary small">Fútbol 11</p>
-          </div>
-          <a href="#" class="btn btn-success rounded-pill px-3">Reservar</a>
-        </div>
+        <a href="#" class="btn btn-success rounded-pill px-3">Reservar</a>
       </div>
     </div>
+  {% endfor %}
 
     <!-- Botón Ver más -->
     <div class="text-center mt-4">

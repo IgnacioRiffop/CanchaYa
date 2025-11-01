@@ -10,10 +10,10 @@ from django.db import transaction
 from core.models import Usuario
 from django.http import JsonResponse
 import re
+from .models import *
 
 
-def index(request):
-    return render(request,'core/index.html')
+
 
 def contacto(request):
     return render(request, 'core/contacto.html')
@@ -26,7 +26,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 
 def index(request):
-    return render(request, 'core/index.html')
+    canchas = Cancha.objects.all()[:2]  # solo las primeras 2
+    return render(request,'core/index.html', {'canchas': canchas})
 
 def contacto(request):
     return render(request, 'core/contacto.html')
