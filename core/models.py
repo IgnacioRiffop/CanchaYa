@@ -20,6 +20,7 @@ class Cancha(models.Model):
     imagen = models.ImageField(upload_to='canchas/', blank=True, null=True)
     hora_inicio = models.TimeField()
     hora_fin = models.TimeField()
+    precio = models.PositiveIntegerField(null=True, blank=True)
     tipo_cancha = models.ForeignKey(TipoCancha, on_delete=models.CASCADE, db_column='tipo_cancha_id_tipo_cancha')
 
     class Meta:
@@ -35,6 +36,7 @@ class Equipamiento(models.Model):
     id_equipamiento = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=150)
     stock = models.PositiveIntegerField()
+    precio = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:
         db_table = 'equipamiento'

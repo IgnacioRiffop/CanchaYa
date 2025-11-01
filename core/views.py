@@ -11,6 +11,8 @@ from core.models import Usuario
 from django.http import JsonResponse
 import re
 from .models import *
+from django.core.paginator import Paginator
+
 
 
 
@@ -236,8 +238,48 @@ def restablecer_contrasena(request, uidb64, token):
         return redirect('index')
     
 
+# views.py
 def canchas(request):
-    return render(request, 'core/canchas.html')
+    canchas_list = Cancha.objects.all()
+    
+    # Filtros
+    tipo = request.GET.get('tipo')
+    precio = request.GET.get('precio')
+    hora = request.GET.get('hora')
+
+    if tipo:
+        canchas_list = canchas_list.filter(tipo_cancha__nombre__icontains=tipo)
+
+    if precio:
+        try:
+            precio_max = int(precio)
+            canchas_list = canchas_list.filter(precio__lte=precio_max)
+        except ValueError:
+            pass
+
+    if hora:
+        # Filtra canchas cuya hora_inicio <= hora <= hora_fin
+        from datetime import time
+        h, m = map(int, hora.split(':'))
+        hora_obj = time(h, m)
+        canchas_list = canchas_list.filter(hora_inicio__lte=hora_obj, hora_fin__gte=hora_obj)
+
+    # Paginación
+    paginator = Paginator(canchas_list, 5)
+    page_number = request.GET.get('page')
+    canchas = paginator.get_page(page_number)
+
+    # Para select de filtros
+    tipos = TipoCancha.objects.all()
+    horas = [f"{h:02d}:00" for h in range(8, 24)]  # 08:00 a 23:00
+
+    return render(request, 'core/canchas.html', {
+        'canchas': canchas,
+        'tipos': tipos,
+        'horas': horas,
+    })
+
+
 
 from django.contrib.auth.decorators import login_required
 from django.db import connections

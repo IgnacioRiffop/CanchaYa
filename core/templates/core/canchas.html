@@ -7,53 +7,88 @@
   <!-- 🔍 Filtros -->
   <h2 class="text-center fw-bold mb-4">Busca según lo que necesitas</h2>
 
-  <form class="filter-bar d-flex justify-content-center align-items-center gap-3 flex-wrap mb-5">
-    <input type="text" class="form-control filter-input" placeholder="Tipo de cancha">
-    <input type="date" class="form-control filter-input">
-    <input type="time" class="form-control filter-input">
-    <input type="number" class="form-control filter-input" placeholder="Precio máx.">
-    <button class="btn btn-success btn-lg px-4">Buscar</button>
-  </form>
+<form method="GET" class="filter-bar d-flex justify-content-center align-items-center gap-3 flex-wrap mb-5">
+  <select name="tipo" class="form-select filter-input">
+    <option value="">Todos los tipos</option>
+    {% for t in tipos %}
+      <option value="{{ t.nombre }}" {% if request.GET.tipo == t.nombre %}selected{% endif %}>{{ t.nombre }}</option>
+    {% endfor %}
+  </select>
+
+  <input type="date" name="fecha" class="form-control filter-input" value="{{ request.GET.fecha }}">
+
+  <select name="hora" class="form-select filter-input">
+    <option value="">Cualquier horario</option>
+    {% for h in horas %}
+      <option value="{{ h }}" {% if request.GET.hora == h %}selected{% endif %}>{{ h }}</option>
+    {% endfor %}
+  </select>
+
+
+  <input type="number" name="precio" class="form-control filter-input" placeholder="Precio máx." value="{{ request.GET.precio }}">
+  <button type="submit" class="btn btn-success btn-lg px-4">Buscar</button>
+</form>
+
+
 
   <!-- 🏟️ Listado de canchas -->
   <div class="court-list container">
     
-    <!-- Tarjeta 1 -->
+    {% for cancha in canchas %}
     <div class="court-card d-flex align-items-center p-3 mb-4 shadow-sm rounded-4 bg-white hover-card">
-      <img src="https://www.parqueygrama.com/wp-content/uploads/2019/04/cancha-de-futbol.jpg" 
-           alt="Cancha de fútbol" class="court-img rounded-3 me-3">
+      <img src="{{ cancha.imagen.url }}" 
+          alt="{{ cancha.nombre }}" 
+          class="court-img rounded-3 me-3">
       <div class="flex-grow-1">
-        <h5 class="fw-bold mb-1">Complejo deportivo El Peral</h5>
-        <p class="text-muted mb-1 small">Av. Concha y Toro 3710, Puente Alto</p>
-        <p class="text-secondary small">Fútbol 11</p>
+        <h5 class="fw-bold mb-1">{{ cancha.nombre }}</h5>
+        <p class="text-muted mb-1 small">{{ cancha.direccion }}</p>
+        <p class="text-secondary small">{{ cancha.tipo_cancha.nombre }}</p>
+        <p class="">${{ cancha.precio }}</p>
       </div>
       <a href="{% url 'reserva' %}" class="btn btn-success rounded-pill px-4 py-2">Reservar</a>
     </div>
-
-    <!-- Tarjeta 2 -->
-    <div class="court-card d-flex align-items-center p-3 mb-4 shadow-sm rounded-4 bg-white hover-card">
-      <img src="https://png.pngtree.com/background/20230426/original/pngtree-this-basketball-court-is-empty-and-at-night-it-is-hard-picture-image_2481045.jpg"
-           alt="Cancha de padel" class="court-img rounded-3 me-3">
-      <div class="flex-grow-1">
-        <h5 class="fw-bold mb-1">Club Suizo</h5>
-        <p class="text-muted mb-1 small">Cerro de Pasco 1522, Ñuñoa</p>
-        <p class="text-secondary small">Padel</p>
-      </div>
-      <a href="{% url 'reserva' %}" class="btn btn-success rounded-pill px-4 py-2">Reservar</a>
-    </div>
-
-    <!-- Tarjeta 3 -->
-    <div class="court-card d-flex align-items-center p-3 mb-4 shadow-sm rounded-4 bg-white hover-card">
-      <img src="https://cdn.pixabay.com/photo/2017/08/03/11/49/football-2574898_1280.jpg"
-           alt="Cancha de futbolito" class="court-img rounded-3 me-3">
-      <div class="flex-grow-1">
-        <h5 class="fw-bold mb-1">Centro Deportivo Santiago</h5>
-        <p class="text-muted mb-1 small">Antonio López de Bello 8395, Providencia</p>
-        <p class="text-secondary small">Futbolito</p>
-      </div>
-      <a href="{% url 'reserva' %}" class="btn btn-success rounded-pill px-4 py-2">Reservar</a>
-    </div>
-
+    {% endfor %}
   </div>
+
+ <!-- 📄 Paginación -->
+<div class="pagination d-flex justify-content-center mt-4">
+  <nav>
+    <ul class="pagination">
+      {% if canchas.has_previous %}
+        <li class="page-item">
+          <a class="page-link text-success" 
+             href="?page={{ canchas.previous_page_number }}&tipo={{ request.GET.tipo }}&fecha={{ request.GET.fecha }}&hora={{ request.GET.hora }}&precio={{ request.GET.precio }}">
+             Anterior
+          </a>
+        </li>
+      {% endif %}
+
+      {% for num in canchas.paginator.page_range %}
+        {% if canchas.number == num %}
+          <li class="page-item active">
+            <a class="page-link bg-success border-success" href="#">{{ num }}</a>
+          </li>
+        {% else %}
+          <li class="page-item">
+            <a class="page-link text-success" 
+               href="?page={{ num }}&tipo={{ request.GET.tipo }}&fecha={{ request.GET.fecha }}&hora={{ request.GET.hora }}&precio={{ request.GET.precio }}">
+               {{ num }}
+            </a>
+          </li>
+        {% endif %}
+      {% endfor %}
+
+      {% if canchas.has_next %}
+        <li class="page-item">
+          <a class="page-link text-success" 
+             href="?page={{ canchas.next_page_number }}&tipo={{ request.GET.tipo }}&fecha={{ request.GET.fecha }}&hora={{ request.GET.hora }}&precio={{ request.GET.precio }}">
+             Siguiente
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+
 </div>
 {% endblock %}

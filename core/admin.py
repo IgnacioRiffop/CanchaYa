@@ -4,7 +4,7 @@ from .models import Cancha, Usuario, Reserva, TipoCancha, Horario, Promocion, Eq
 
 @admin.register(Cancha)
 class CanchaAdmin(admin.ModelAdmin):
-    list_display = ('id_cancha', 'nombre', 'tipo_cancha', 'imagen_preview', 'hora_inicio', 'hora_fin')
+    list_display = ('id_cancha', 'nombre', 'tipo_cancha', 'precio', 'imagen_preview', 'hora_inicio', 'hora_fin')
     readonly_fields = ('imagen_preview',)
 
     def imagen_preview(self, obj):
