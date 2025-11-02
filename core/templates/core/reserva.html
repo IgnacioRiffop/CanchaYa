@@ -175,7 +175,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-  // ---------- Elementos ----------
   const precioCancha = {{ cancha.precio }};
   const horariosBtns = document.querySelectorAll('.horario-btn');
   const horarioInput = document.getElementById('horario-id');
@@ -184,8 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const descuentoElem = document.getElementById('descuento');
   const equipamientosInput = document.getElementById('equipamientos-input');
 
-  const promoInput = document.getElementById('promo-codigo'); // input para código de promoción
-  const mensajePromo = document.getElementById('mensaje-promocion'); // small debajo del input
+  const promoInput = document.getElementById('promo-codigo');
+  const mensajePromo = document.getElementById('mensaje-promocion');
   const btnAplicarPromo = document.getElementById('btn-aplicar-promo');
 
   const equipCantidades = {};
@@ -199,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAgregar = document.getElementById('btn-agregar-equip');
   const contenedorEquip = document.getElementById('equipamientos-seleccionados');
 
-  let promocion = null; // promocion aplicada
+  let promocion = null;
 
   // ---------- Función para actualizar total ----------
   function actualizarTotal() {
@@ -216,12 +215,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let descuento = 0;
-    if (promocion) {
+    if (promocion && subtotal > 0) {
       if (promocion.descuento_porcentaje) {
         descuento = subtotal * promocion.descuento_porcentaje / 100;
       } else if (promocion.descuento_fijo) {
         descuento = promocion.descuento_fijo;
       }
+      if (descuento > subtotal) descuento = subtotal; // nunca negativo
     }
 
     const total = subtotal - descuento;
@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnAgregar.addEventListener('click', () => {
     const selectedId = selectEquip.value;
     if (!selectedId) return;
-    if (document.getElementById(`equip-${selectedId}`)) return; // evitar duplicados
+    if (document.getElementById(`equip-${selectedId}`)) return;
 
     const equip = equipamientosDisponibles.find(e => e.id === selectedId);
     equipCantidades[selectedId] = 0;
@@ -291,7 +291,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const codigo = promoInput.value.trim();
     if (!codigo) return;
 
-    fetch(`/api/promocion/${codigo}/`)  // asegúrate que esta URL exista en Django
+    // Verificar que haya subtotal > 0
+    let subtotalActual = 0;
+    if (horarioInput.value) subtotalActual += precioCancha;
+    for (let id in equipCantidades) subtotalActual += (equipCantidades[id] || 0) * equipamientosDisponibles.find(e => e.id === id).precio;
+
+    if (subtotalActual === 0) {
+      Swal.fire('Atención', 'Selecciona un horario o equipamiento antes de aplicar la promoción', 'warning');
+      return;
+    }
+
+    fetch(`/api/promocion/${codigo}/`)
       .then(res => res.json())
       .then(data => {
         if (data.error) {
