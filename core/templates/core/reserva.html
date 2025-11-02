@@ -152,13 +152,16 @@
           <input type="hidden" name="fecha" id="fecha-hidden" value="{{ fecha_seleccionada|default:fecha_actual|date:'Y-m-d' }}">
           <input type="hidden" name="horario_id" id="horario-id" value="">
           <input type="hidden" name="equipamientos" id="equipamientos-input" value="">
+          <input type="hidden" name="codigo_promocion" id="codigo-promocion" value="">  
+
+          <!-- ✅ botón dentro del form -->
+          <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success btn-lg px-5" id="btn-confirmar">
+              Confirmar Reserva
+            </button>
+          </div>
         </form>
 
-        <div class="text-center mt-4">
-          <button class="btn btn-success btn-lg px-5" id="btn-confirmar">
-            Confirmar Reserva
-          </button>
-        </div>
       </div>
     </div>
 
@@ -176,12 +179,13 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   const precioCancha = {{ cancha.precio }};
-  const horariosBtns = document.querySelectorAll('.horario-btn');
+  let horariosBtns = document.querySelectorAll('.horario-btn');
   const horarioInput = document.getElementById('horario-id');
   const subtotalElem = document.getElementById('subtotal');
   const totalElem = document.getElementById('total');
   const descuentoElem = document.getElementById('descuento');
   const equipamientosInput = document.getElementById('equipamientos-input');
+  const codigoPromoInputHidden = document.getElementById('codigo-promocion'); // ✅
 
   const promoInput = document.getElementById('promo-codigo');
   const mensajePromo = document.getElementById('mensaje-promocion');
@@ -198,12 +202,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAgregar = document.getElementById('btn-agregar-equip');
   const contenedorEquip = document.getElementById('equipamientos-seleccionados');
 
+  const fechaInput = document.getElementById('fecha');
+  const fechaHidden = document.getElementById('fecha-hidden');
+
   let promocion = null;
 
   // ---------- Función para actualizar total ----------
   function actualizarTotal() {
     let subtotal = 0;
-
     if (horarioInput.value) subtotal += precioCancha;
 
     for (let id in equipCantidades) {
@@ -225,9 +231,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const total = subtotal - descuento;
-    subtotalElem.textContent = `$${subtotal}`;
-    descuentoElem.textContent = `$${descuento}`;
-    totalElem.textContent = `$${total}`;
+
+    // ✅ Redondear montos
+    const redondear = (num) => Math.round(num * 100) / 100;
+    subtotalElem.textContent = `$${redondear(subtotal)}`;
+    descuentoElem.textContent = `$${redondear(descuento)}`;
+    totalElem.textContent = `$${redondear(total)}`;
+
+    // Animar actualización del total (suave UX)
+    totalElem.classList.add('fw-bold', 'text-success', 'animate__animated', 'animate__pulse');
+    setTimeout(() => totalElem.classList.remove('animate__animated', 'animate__pulse'), 700);
 
     equipamientosInput.value = JSON.stringify(equipCantidades);
   }
@@ -272,26 +285,75 @@ document.addEventListener('DOMContentLoaded', () => {
     actualizarTotal();
   });
 
-  // ---------- Selección de horario ----------
-  horariosBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      horariosBtns.forEach(b => b.classList.remove('btn-success', 'activo'));
-      horariosBtns.forEach(b => b.classList.add('btn-outline-success'));
+  // ---------- Función para renderizar horarios ----------
+  function renderHorarios(horarios_disponibles, horarios_ocupados) {
+    const horariosContainer = document.getElementById('horarios-container');
+    horariosContainer.innerHTML = '';
+    horariosBtns = [];
 
-      btn.classList.remove('btn-outline-success');
-      btn.classList.add('btn-success', 'activo');
-
-      horarioInput.value = btn.dataset.id;
-      actualizarTotal();
+    horarios_disponibles.forEach(horario => {
+      const btn = document.createElement('button');
+      btn.textContent = `${horario.hora_inicio} - ${horario.hora_fin}`;
+      if (horarios_ocupados.includes(horario.id_horario)) {
+        btn.className = 'btn btn-secondary m-1';
+        btn.disabled = true;
+      } else {
+        btn.className = 'btn btn-outline-success m-1 horario-btn';
+        btn.dataset.id = horario.id_horario;
+        btn.addEventListener('click', () => {
+          horariosBtns.forEach(b => {
+            b.classList.remove('btn-success', 'activo');
+            b.classList.add('btn-outline-success');
+          });
+          btn.classList.remove('btn-outline-success');
+          btn.classList.add('btn-success', 'activo');
+          horarioInput.value = btn.dataset.id;
+          actualizarTotal();
+        });
+      }
+      horariosContainer.appendChild(btn);
+      if (!btn.disabled) horariosBtns.push(btn);
     });
+
+    // Limpiar selección de horario
+    horarioInput.value = '';
+    actualizarTotal();
+  }
+
+  // ---------- Actualizar horarios al cambiar fecha ----------
+  fechaInput.addEventListener('change', () => {
+    const fecha = fechaInput.value;
+    fechaHidden.value = fecha;
+
+    fetch(`/api/horarios_ocupados/?cancha_id={{ cancha.id_cancha }}&fecha=${fecha}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          Swal.fire('Error', data.error, 'error');
+          return;
+        }
+        renderHorarios(data.horarios_disponibles, data.horarios_ocupados);
+      })
+      .catch(() => {
+        Swal.fire('Error', 'No se pudo cargar los horarios para esta fecha', 'error');
+      });
   });
+
+  // ---------- Inicializar selección de horario ----------
+  renderHorarios(
+    Array.from(horariosBtns).map(b => ({
+      id_horario: b.dataset.id,
+      hora_inicio: b.textContent.split(' - ')[0],
+      hora_fin: b.textContent.split(' - ')[1]
+    })),
+    Array.from(document.querySelectorAll('.btn-secondary')).map(b => b.dataset.id)
+  );
 
   // ---------- Aplicar promoción ----------
   btnAplicarPromo.addEventListener('click', () => {
     const codigo = promoInput.value.trim();
     if (!codigo) return;
 
-    // Verificar que haya subtotal > 0
     let subtotalActual = 0;
     if (horarioInput.value) subtotalActual += precioCancha;
     for (let id in equipCantidades) subtotalActual += (equipCantidades[id] || 0) * equipamientosDisponibles.find(e => e.id === id).precio;
@@ -306,13 +368,15 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.error) {
           promocion = null;
+          codigoPromoInputHidden.value = "";
           mensajePromo.textContent = data.error;
           mensajePromo.classList.remove('text-success');
           mensajePromo.classList.add('text-danger');
           Swal.fire('Error', data.error, 'error');
         } else {
           promocion = data;
-          const msg = `Descuento aplicado.`;
+          codigoPromoInputHidden.value = codigo;
+          const msg = `Descuento aplicado (${data.descuento_porcentaje ? data.descuento_porcentaje + '%' : '$' + data.descuento_fijo}).`;
           mensajePromo.textContent = msg;
           mensajePromo.classList.remove('text-danger');
           mensajePromo.classList.add('text-success');
@@ -322,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(() => {
         promocion = null;
+        codigoPromoInputHidden.value = "";
         mensajePromo.textContent = 'No se pudo validar la promoción';
         mensajePromo.classList.remove('text-success');
         mensajePromo.classList.add('text-danger');
@@ -334,6 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
   actualizarTotal();
 });
 </script>
+
 
 
 {% endblock %}

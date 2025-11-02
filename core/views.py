@@ -46,13 +46,20 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+            
+            # Obtener el objeto Usuario de tu tabla Oracle
+            try:
+                usuario = Usuario.objects.get(email=user.email)
+                request.session['usuario_id'] = usuario.id_usuario
+            except Usuario.DoesNotExist:
+                messages.error(request, "No se encontró tu usuario en la base de datos interna.")
+                return redirect('index')
+
             messages.success(request, f'¡Bienvenido {user.username}! Has iniciado sesión correctamente.')
             return redirect('index')
         else:
             messages.error(request, 'Correo o contraseña incorrectos.')
             return redirect('index')
-
-    return redirect('index')
 
 def logout_view(request):
     logout(request)
@@ -397,12 +404,18 @@ def reserva(request, id_cancha):
 
 
 
+
 def confirmar_reserva(request):
     if request.method == "POST":
+        usuario_id = request.session.get('usuario_id')
+        if not usuario_id:
+            messages.error(request, "Debes iniciar sesión para reservar.")
+            return redirect('login')
+
         cancha_id = request.POST.get('cancha_id')
         fecha = request.POST.get('fecha')
         horario_id = request.POST.get('horario_id')
-        usuario_id = request.user.id
+        codigo_promocion = request.POST.get('codigo_promocion', '').strip()
         equipamientos_json = request.POST.get('equipamientos', '{}')
 
         if not horario_id:
@@ -429,7 +442,21 @@ def confirmar_reserva(request):
         except json.JSONDecodeError:
             equipamientos = {}
 
+        # Aplicar descuento si hay código de promoción
         descuento = 0
+        promo = None
+        if codigo_promocion:
+            try:
+                promo = Promocion.objects.get(codigo__iexact=codigo_promocion, activo=True)
+                if promo.descuento_porcentaje:
+                    descuento = subtotal * promo.descuento_porcentaje / 100
+                elif promo.descuento_fijo:
+                    descuento = promo.descuento_fijo
+                if descuento > subtotal:
+                    descuento = subtotal
+            except Promocion.DoesNotExist:
+                descuento = 0
+
         total = subtotal - descuento
 
         # Crear reserva
@@ -441,7 +468,8 @@ def confirmar_reserva(request):
             estado='A',
             cancha=cancha,
             usuario=usuario,
-            horario=horario
+            horario=horario,
+            promocion=promo
         )
 
         # Guardar equipamientos seleccionados
@@ -487,3 +515,41 @@ def validar_promocion(request, codigo):
         })
     except Promocion.DoesNotExist:
         return JsonResponse({'error': 'Código de promoción inválido'}, status=404)
+    
+
+
+def api_horarios_ocupados(request):
+    cancha_id = request.GET.get('cancha_id')
+    fecha_str = request.GET.get('fecha')
+
+    if not cancha_id or not fecha_str:
+        return JsonResponse({'error': 'Faltan parámetros'}, status=400)
+
+    try:
+        fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+        cancha = Cancha.objects.get(id_cancha=cancha_id)
+    except (ValueError, Cancha.DoesNotExist):
+        return JsonResponse({'error': 'Parámetros inválidos'}, status=400)
+
+    # Horarios de la cancha
+    horarios_disponibles = list(Horario.objects.filter(
+        hora_inicio__gte=cancha.hora_inicio,
+        hora_fin__lte=cancha.hora_fin
+    ).order_by('hora_inicio').values('id_horario', 'hora_inicio', 'hora_fin'))
+
+    # Horarios ocupados en esa fecha
+    horarios_ocupados = list(Reserva.objects.filter(
+        cancha=cancha,
+        fecha=fecha,
+        estado='A'
+    ).values_list('horario_id', flat=True))
+
+    # Convertir horas a string H:i
+    for h in horarios_disponibles:
+        h['hora_inicio'] = h['hora_inicio'].strftime('%H:%M')
+        h['hora_fin'] = h['hora_fin'].strftime('%H:%M')
+
+    return JsonResponse({
+        'horarios_disponibles': horarios_disponibles,
+        'horarios_ocupados': horarios_ocupados
+    })

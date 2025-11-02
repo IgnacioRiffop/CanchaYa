@@ -21,5 +21,5 @@ urlpatterns = [
     path('detalleReserva/', views.detalleReserva, name='detalleReserva'),
     path('confirmar_reserva/', views.confirmar_reserva, name='confirmar_reserva'),
     path('api/promocion/<str:codigo>/', views.validar_promocion, name='validar_promocion'),
-
+    path('api/horarios_ocupados/', views.api_horarios_ocupados, name='api_horarios_ocupados'),
 ]
