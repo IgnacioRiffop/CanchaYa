@@ -71,9 +71,11 @@ class Horario(models.Model):
 
 class Promocion(models.Model):
     id_promocion = models.BigAutoField(primary_key=True)
-    codigo = models.CharField(max_length=10)
-    valor = models.BigIntegerField(blank=True, null=True)
-    porcentaje = models.BigIntegerField(blank=True, null=True)
+    codigo = models.CharField(max_length=10, null=True, blank=True)
+    descripcion = models.CharField(max_length=255, null=True, blank=True)
+    descuento_porcentaje = models.PositiveIntegerField(default=0, null=True, blank=True)  # Ej: 10 -> 10%
+    descuento_fijo = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)  # Ej: 50 -> $50
+    activo = models.BooleanField(default=True, null=True, blank=True)
 
     class Meta:
         db_table = 'promocion'

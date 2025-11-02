@@ -475,3 +475,15 @@ def historialReserva(request):
 
 def detalleReserva(request):
     return render(request, 'core/detalleReserva.html')
+
+def validar_promocion(request, codigo):
+    try:
+        promo = Promocion.objects.get(codigo__iexact=codigo, activo=True)
+        return JsonResponse({
+            'id': promo.id_promocion,
+            'codigo': promo.codigo,
+            'descuento_porcentaje': promo.descuento_porcentaje,
+            'descuento_fijo': float(promo.descuento_fijo),
+        })
+    except Promocion.DoesNotExist:
+        return JsonResponse({'error': 'Código de promoción inválido'}, status=404)

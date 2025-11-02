@@ -20,4 +20,6 @@ urlpatterns = [
     path('historialReserva/', views.historialReserva, name='historialReserva'),
     path('detalleReserva/', views.detalleReserva, name='detalleReserva'),
     path('confirmar_reserva/', views.confirmar_reserva, name='confirmar_reserva'),
+    path('api/promocion/<str:codigo>/', views.validar_promocion, name='validar_promocion'),
+
 ]

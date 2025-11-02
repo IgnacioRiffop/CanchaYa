@@ -108,6 +108,23 @@
 
       </div>
     </div>
+    
+    <!-- Código promocional -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title mb-3">Código Promocional</h5>
+
+        <div class="mb-3">
+          <label for="promo-codigo" class="form-label">Ingresa tu código de promoción</label>
+          <div class="input-group">
+            <input type="text" id="promo-codigo" class="form-control" placeholder="Ej: PROMO10">
+            <button type="button" id="btn-aplicar-promo" class="btn btn-success">Aplicar</button>
+          </div>
+          <small id="mensaje-promocion" class="text-success"></small>
+        </div>
+
+      </div>
+    </div>
 
 
     <!-- Resumen de pago -->
@@ -148,45 +165,17 @@
   </div>
 </main>
 
+
 <!-- Cargar el JS según tu ruta -->
 <script src="{% static 'js/reserva.js' %}"></script>
 
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- Confirmación elegante -->
-<script>
-  function confirmarReserva() {
-    Swal.fire({
-      title: '¿Confirmar reserva?',
-      text: '¿Estás seguro de que deseas confirmar esta reserva?',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#28a745',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, confirmar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          icon: 'success',
-          title: '¡Reserva confirmada!',
-          text: 'Serás redirigido al comprobante...',
-          confirmButtonColor: '#28a745',
-          showConfirmButton: false,
-          timer: 1800
-        });
-        setTimeout(() => {
-          window.location.href = "{% url 'comprobante' %}";
-        }, 1800);
-      }
-    });
-  }
-</script>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
+  // ---------- Elementos ----------
   const precioCancha = {{ cancha.precio }};
   const horariosBtns = document.querySelectorAll('.horario-btn');
   const horarioInput = document.getElementById('horario-id');
@@ -195,7 +184,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const descuentoElem = document.getElementById('descuento');
   const equipamientosInput = document.getElementById('equipamientos-input');
 
-  const equipCantidades = {}; // {equip_id: cantidad}
+  const promoInput = document.getElementById('promo-codigo'); // input para código de promoción
+  const mensajePromo = document.getElementById('mensaje-promocion'); // small debajo del input
+  const btnAplicarPromo = document.getElementById('btn-aplicar-promo');
+
+  const equipCantidades = {};
   const equipamientosDisponibles = [
     {% for equipamiento in equipamientos_disponibles %}
       {id: '{{ equipamiento.id_equipamiento }}', nombre: '{{ equipamiento.nombre }}', precio: {{ equipamiento.precio }} },
@@ -206,41 +199,48 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAgregar = document.getElementById('btn-agregar-equip');
   const contenedorEquip = document.getElementById('equipamientos-seleccionados');
 
-  // Función para actualizar total
+  let promocion = null; // promocion aplicada
+
+  // ---------- Función para actualizar total ----------
   function actualizarTotal() {
-    let total = 0;
+    let subtotal = 0;
 
-    // Sumar precio de cancha solo si se seleccionó horario
-    if (horarioInput.value) total += precioCancha;
+    if (horarioInput.value) subtotal += precioCancha;
 
-    // Sumar equipamientos
     for (let id in equipCantidades) {
       const cantidad = equipCantidades[id];
       if (cantidad > 0) {
         const precio = equipamientosDisponibles.find(e => e.id === id).precio;
-        total += cantidad * precio;
+        subtotal += cantidad * precio;
       }
     }
 
-    subtotalElem.textContent = `$${total}`;
-    descuentoElem.textContent = `$0`;
+    let descuento = 0;
+    if (promocion) {
+      if (promocion.descuento_porcentaje) {
+        descuento = subtotal * promocion.descuento_porcentaje / 100;
+      } else if (promocion.descuento_fijo) {
+        descuento = promocion.descuento_fijo;
+      }
+    }
+
+    const total = subtotal - descuento;
+    subtotalElem.textContent = `$${subtotal}`;
+    descuentoElem.textContent = `$${descuento}`;
     totalElem.textContent = `$${total}`;
 
     equipamientosInput.value = JSON.stringify(equipCantidades);
   }
 
-  // Agregar equipamiento dinámicamente
+  // ---------- Agregar equipamiento ----------
   btnAgregar.addEventListener('click', () => {
     const selectedId = selectEquip.value;
     if (!selectedId) return;
-
-    // Evitar duplicados: si ya existe el div, no agregar
-    if (document.getElementById(`equip-${selectedId}`)) return;
+    if (document.getElementById(`equip-${selectedId}`)) return; // evitar duplicados
 
     const equip = equipamientosDisponibles.find(e => e.id === selectedId);
     equipCantidades[selectedId] = 0;
 
-    // Crear bloque HTML
     const div = document.createElement('div');
     div.classList.add('d-flex', 'justify-content-between', 'align-items-center', 'mb-3');
     div.id = `equip-${selectedId}`;
@@ -258,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     contenedorEquip.appendChild(div);
 
-    // Asignar listeners a los botones de cantidad
     div.querySelectorAll('.btn-cant').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
@@ -273,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
     actualizarTotal();
   });
 
-  // Manejar selección de horario
+  // ---------- Selección de horario ----------
   horariosBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       horariosBtns.forEach(b => b.classList.remove('btn-success', 'activo'));
@@ -287,51 +286,44 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Inicializar total al cargar
+  // ---------- Aplicar promoción ----------
+  btnAplicarPromo.addEventListener('click', () => {
+    const codigo = promoInput.value.trim();
+    if (!codigo) return;
+
+    fetch(`/api/promocion/${codigo}/`)  // asegúrate que esta URL exista en Django
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          promocion = null;
+          mensajePromo.textContent = data.error;
+          mensajePromo.classList.remove('text-success');
+          mensajePromo.classList.add('text-danger');
+          Swal.fire('Error', data.error, 'error');
+        } else {
+          promocion = data;
+          const msg = `Descuento aplicado.`;
+          mensajePromo.textContent = msg;
+          mensajePromo.classList.remove('text-danger');
+          mensajePromo.classList.add('text-success');
+          Swal.fire('Promoción aplicada', msg, 'success');
+        }
+        actualizarTotal();
+      })
+      .catch(() => {
+        promocion = null;
+        mensajePromo.textContent = 'No se pudo validar la promoción';
+        mensajePromo.classList.remove('text-success');
+        mensajePromo.classList.add('text-danger');
+        Swal.fire('Error', 'No se pudo validar la promoción', 'error');
+        actualizarTotal();
+      });
+  });
+
+  // Inicializar total
   actualizarTotal();
 });
 </script>
 
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const fechaInput = document.getElementById('fecha');
-  const horariosContainer = document.getElementById('horarios-container');
-  const horarioInput = document.getElementById('horario-id');
-
-  fechaInput.addEventListener('change', () => {
-    const fecha = fechaInput.value;
-    horarioInput.value = ''; // Reset selección
-    horariosContainer.innerHTML = '<span class="text-muted">Cargando horarios...</span>';
-
-    fetch(`{% url 'reserva' cancha.id_cancha %}?fecha=${fecha}`)
-      .then(response => response.text())
-      .then(html => {
-        // Crear un contenedor temporal para filtrar solo los botones
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
-        const nuevosHorarios = tempDiv.querySelector('#horarios-container').innerHTML;
-        horariosContainer.innerHTML = nuevosHorarios;
-
-        // Reasignar eventos a los nuevos botones
-        document.querySelectorAll('.horario-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            document.querySelectorAll('.horario-btn').forEach(b => {
-              b.classList.remove('btn-success', 'activo');
-              b.classList.add('btn-outline-success');
-            });
-            btn.classList.remove('btn-outline-success');
-            btn.classList.add('btn-success', 'activo');
-            horarioInput.value = btn.dataset.id;
-          });
-        });
-      })
-      .catch(err => {
-        console.error(err);
-        horariosContainer.innerHTML = '<span class="text-danger">Error al cargar horarios</span>';
-      });
-  });
-});
-</script>
 
 {% endblock %}
