@@ -355,31 +355,33 @@ def reserva(request, id_cancha):
     cancha = get_object_or_404(Cancha, pk=id_cancha)
     equipamientos_disponibles = Equipamiento.objects.filter(tipos_cancha=cancha.tipo_cancha)
 
-    # Filtrar horarios dentro del rango de la cancha
-    horarios_disponibles = Horario.objects.filter(
-        hora_inicio__gte=cancha.hora_inicio,
-        hora_fin__lte=cancha.hora_fin
-    ).order_by('hora_inicio')
-
     # Fechas mínimas y máximas
     hoy = date.today()
     fecha_max = hoy + timedelta(days=30)
 
     # Manejar selección de fecha
-    fecha_seleccionada = request.GET.get('fecha')
-    if fecha_seleccionada:
-        # Convertir string a date
-        fecha_seleccionada = datetime.strptime(fecha_seleccionada, "%Y-%m-%d").date()
+    fecha_str = request.GET.get('fecha')
+    if fecha_str:
+        try:
+            fecha_seleccionada = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+        except ValueError:
+            fecha_seleccionada = hoy
     else:
         fecha_seleccionada = hoy
 
-    horarios_ocupados = []
-    if fecha_seleccionada:
-        reservas = Reserva.objects.filter(
-            cancha=cancha,
-            fecha=fecha_seleccionada
-        )
-        horarios_ocupados = reservas.values_list('horario_id', flat=True)
+    # Obtener horarios dentro del rango de la cancha
+    horarios_disponibles = Horario.objects.filter(
+        hora_inicio__gte=cancha.hora_inicio,
+        hora_fin__lte=cancha.hora_fin
+    ).order_by('hora_inicio')
+
+    # Obtener horarios ocupados para la fecha seleccionada
+    reservas_ocupadas = Reserva.objects.filter(
+        cancha=cancha,
+        fecha=fecha_seleccionada,
+        estado='A'  # solo reservas activas
+    ).values_list('horario_id', flat=True)
+    horarios_ocupados = list(reservas_ocupadas)
 
     context = {
         'cancha': cancha,

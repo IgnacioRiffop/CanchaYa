@@ -64,9 +64,9 @@
 
         <!-- Selector de fecha -->
         <input type="date" id="fecha" class="form-control mb-3"
-              min="{{ fecha_actual|date:'Y-m-d' }}" 
+              min="{{ fecha_actual|date:'Y-m-d' }}"
               max="{{ fecha_max|date:'Y-m-d' }}"
-              value="{{ fecha_seleccionada|default:fecha_actual|date:'Y-m-d' }}">
+              value="{{ fecha_seleccionada|date:'Y-m-d' }}">
 
         <!-- Horarios -->
         <div class="d-flex flex-wrap" id="horarios-container">
@@ -83,6 +83,7 @@
           {% endfor %}
         </div>
 
+    <br>
     
     <!-- Equipamiento adicional -->
     <div class="card shadow-sm mb-4">
@@ -292,5 +293,45 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const fechaInput = document.getElementById('fecha');
+  const horariosContainer = document.getElementById('horarios-container');
+  const horarioInput = document.getElementById('horario-id');
+
+  fechaInput.addEventListener('change', () => {
+    const fecha = fechaInput.value;
+    horarioInput.value = ''; // Reset selección
+    horariosContainer.innerHTML = '<span class="text-muted">Cargando horarios...</span>';
+
+    fetch(`{% url 'reserva' cancha.id_cancha %}?fecha=${fecha}`)
+      .then(response => response.text())
+      .then(html => {
+        // Crear un contenedor temporal para filtrar solo los botones
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const nuevosHorarios = tempDiv.querySelector('#horarios-container').innerHTML;
+        horariosContainer.innerHTML = nuevosHorarios;
+
+        // Reasignar eventos a los nuevos botones
+        document.querySelectorAll('.horario-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.horario-btn').forEach(b => {
+              b.classList.remove('btn-success', 'activo');
+              b.classList.add('btn-outline-success');
+            });
+            btn.classList.remove('btn-outline-success');
+            btn.classList.add('btn-success', 'activo');
+            horarioInput.value = btn.dataset.id;
+          });
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        horariosContainer.innerHTML = '<span class="text-danger">Error al cargar horarios</span>';
+      });
+  });
+});
+</script>
 
 {% endblock %}
