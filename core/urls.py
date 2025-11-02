@@ -13,10 +13,11 @@ urlpatterns = [
     path('canchas/', views.canchas, name='canchas'),
     path('perfil/', views.perfil, name='perfil'),
     path('editar_perfil/', views.editar_perfil, name='editar_perfil'),
-    path('reserva/', views.reserva, name='reserva'),
+    path('reserva/<int:id_cancha>/', views.reserva, name='reserva'),
     path('comprobante/', views.comprobante, name='comprobante'),
     path('cuenta/', views.cuenta, name='cuenta'),
     path('modificarCuenta/', views.modificarCuenta, name='modificarCuenta'),
     path('historialReserva/', views.historialReserva, name='historialReserva'),
     path('detalleReserva/', views.detalleReserva, name='detalleReserva'),
+    path('confirmar_reserva/', views.confirmar_reserva, name='confirmar_reserva'),
 ]

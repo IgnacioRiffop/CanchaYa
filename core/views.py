@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.tokens import default_token_generator
@@ -12,9 +12,10 @@ from django.http import JsonResponse
 import re
 from .models import *
 from django.core.paginator import Paginator
-
-
-
+from datetime import time
+from datetime import date, timedelta
+from datetime import datetime
+import json
 
 
 def contacto(request):
@@ -349,8 +350,114 @@ def editar_perfil(request):
     return JsonResponse({'ok': False, 'msg': 'Método inválido.'})
 
 
-def reserva(request):
-    return render(request, 'core/reserva.html')
+
+def reserva(request, id_cancha):
+    cancha = get_object_or_404(Cancha, pk=id_cancha)
+    equipamientos_disponibles = Equipamiento.objects.filter(tipos_cancha=cancha.tipo_cancha)
+
+    # Filtrar horarios dentro del rango de la cancha
+    horarios_disponibles = Horario.objects.filter(
+        hora_inicio__gte=cancha.hora_inicio,
+        hora_fin__lte=cancha.hora_fin
+    ).order_by('hora_inicio')
+
+    # Fechas mínimas y máximas
+    hoy = date.today()
+    fecha_max = hoy + timedelta(days=30)
+
+    # Manejar selección de fecha
+    fecha_seleccionada = request.GET.get('fecha')
+    if fecha_seleccionada:
+        # Convertir string a date
+        fecha_seleccionada = datetime.strptime(fecha_seleccionada, "%Y-%m-%d").date()
+    else:
+        fecha_seleccionada = hoy
+
+    horarios_ocupados = []
+    if fecha_seleccionada:
+        reservas = Reserva.objects.filter(
+            cancha=cancha,
+            fecha=fecha_seleccionada
+        )
+        horarios_ocupados = reservas.values_list('horario_id', flat=True)
+
+    context = {
+        'cancha': cancha,
+        'horarios_disponibles': horarios_disponibles,
+        'horarios_ocupados': horarios_ocupados,
+        'fecha_actual': hoy,
+        'fecha_max': fecha_max,
+        'fecha_seleccionada': fecha_seleccionada,
+        'equipamientos_disponibles': equipamientos_disponibles,
+    }
+
+    return render(request, 'core/reserva.html', context)
+
+
+
+def confirmar_reserva(request):
+    if request.method == "POST":
+        cancha_id = request.POST.get('cancha_id')
+        fecha = request.POST.get('fecha')
+        horario_id = request.POST.get('horario_id')
+        usuario_id = request.user.id
+        equipamientos_json = request.POST.get('equipamientos', '{}')
+
+        if not horario_id:
+            messages.error(request, "Debes seleccionar un horario.")
+            return redirect('reserva', id_cancha=cancha_id)
+
+        cancha = get_object_or_404(Cancha, id_cancha=cancha_id)
+        usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+        horario = get_object_or_404(Horario, id_horario=horario_id)
+
+        # Verificar disponibilidad
+        if Reserva.objects.filter(cancha=cancha, fecha=fecha, horario=horario, estado='A').exists():
+            messages.error(request, "Este horario ya está reservado. Por favor selecciona otro.")
+            return redirect('reserva', id_cancha=cancha_id)
+
+        # Calcular subtotal incluyendo equipamiento
+        subtotal = cancha.precio
+        try:
+            equipamientos = json.loads(equipamientos_json)
+            for equip_id, cantidad in equipamientos.items():
+                if cantidad > 0:
+                    equip = get_object_or_404(Equipamiento, id_equipamiento=equip_id)
+                    subtotal += equip.precio * cantidad
+        except json.JSONDecodeError:
+            equipamientos = {}
+
+        descuento = 0
+        total = subtotal - descuento
+
+        # Crear reserva
+        reserva = Reserva.objects.create(
+            fecha=fecha,
+            subtotal=subtotal,
+            descuento=descuento,
+            total=total,
+            estado='A',
+            cancha=cancha,
+            usuario=usuario,
+            horario=horario
+        )
+
+        # Guardar equipamientos seleccionados
+        for equip_id, cantidad in equipamientos.items():
+            if cantidad > 0:
+                equip = get_object_or_404(Equipamiento, id_equipamiento=equip_id)
+                ReservaEquipamiento.objects.create(
+                    reserva=reserva,
+                    equipamiento=equip,
+                    cantidad=cantidad
+                )
+
+        messages.success(request, f"Reserva realizada con éxito para {cancha.nombre} el {fecha} a las {horario.hora_inicio}.")
+        return redirect('index')
+
+    return redirect('index')
+
+
 
 def comprobante(request):
     return render(request, 'core/comprobante.html')

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Cancha, Usuario, Reserva, TipoCancha, Horario, Promocion, Equipamiento, ReservaEquipamiento
+from .models import *
 
 @admin.register(Cancha)
 class CanchaAdmin(admin.ModelAdmin):
@@ -19,5 +19,17 @@ admin.site.register(Reserva)
 admin.site.register(TipoCancha)
 admin.site.register(Horario)
 admin.site.register(Promocion)
-admin.site.register(Equipamiento)
+@admin.register(Equipamiento)
+
+class EquipamientoAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'stock', 'precio', 'mostrar_tipos')
+    list_filter = ('tipos_cancha',)
+    search_fields = ('nombre',)
+    filter_horizontal = ('tipos_cancha',)
+
+    def mostrar_tipos(self, obj):
+        return ", ".join([t.nombre for t in obj.tipos_cancha.all()])
+    mostrar_tipos.short_description = 'Tipos de Cancha'
+
+
 admin.site.register(ReservaEquipamiento)

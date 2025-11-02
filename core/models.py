@@ -38,6 +38,14 @@ class Equipamiento(models.Model):
     stock = models.PositiveIntegerField()
     precio = models.PositiveIntegerField(null=True, blank=True)
 
+    # Relación ManyToMany con TipoCancha
+    tipos_cancha = models.ManyToManyField(
+        'TipoCancha',
+        related_name='equipamientos',
+        blank=True,
+        db_table='equipamiento_tipo_cancha'  # tabla intermedia personalizada
+    )
+
     class Meta:
         db_table = 'equipamiento'
         verbose_name = 'Equipamiento'

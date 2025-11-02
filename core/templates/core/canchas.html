@@ -45,7 +45,7 @@
         <p class="text-secondary small">{{ cancha.tipo_cancha.nombre }}</p>
         <p class="">${{ cancha.precio }}</p>
       </div>
-      <a href="{% url 'reserva' %}" class="btn btn-success rounded-pill px-4 py-2">Reservar</a>
+      <a href="{% url 'reserva' cancha.id_cancha %}" class="btn btn-success rounded-pill px-4 py-2">Reservar</a>
     </div>
     {% endfor %}
   </div>
