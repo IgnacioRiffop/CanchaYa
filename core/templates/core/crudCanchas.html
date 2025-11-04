@@ -1,4 +1,4 @@
-{% extends 'core/base.html' %}
+{% extends 'core/base.html' %} 
 {% load static %}
 
 {% block title %}Canchas | CanchaYa{% endblock %}
@@ -10,61 +10,119 @@
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <div>
       <h1 class="h3 fw-bold mb-1">Canchas</h1>
-      <p class="text-muted m-0">Listado de canchas (visual, con acciones rápidas).</p>
+      <p class="text-muted mb-0">Administra las canchas disponibles (agregar, editar, eliminar).</p>
     </div>
-    <a href="#" class="btn btn-success fw-semibold">
+    <a href="{% url 'cancha_add' %}" class="btn btn-success fw-semibold">
       <i class="fa-solid fa-plus me-2"></i> Agregar
     </a>
   </div>
 
+  {% if canchas %}
   <!-- Grid de tarjetas -->
   <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
-
-    <!-- Cancha 1 (demo) -->
+    {% for c in canchas %}
     <div class="col">
       <div class="cu-item-card h-100 d-flex flex-column">
         <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Cancha 1 · Pasto Sintético</h5>
-          <small class="text-muted d-block">Av. Siempre Viva 742, Maipú</small>
-          <small class="text-muted">Medidas: 40x20 · Techada</small>
+          <div class="d-flex align-items-center gap-3">
+            {% if c.imagen %}
+              <img src="{{ c.imagen.url }}" alt="{{ c.nombre }}" class="rounded-3" style="width:96px;height:72px;object-fit:cover;border:1px solid #cfeadc;">
+            {% else %}
+              <div class="d-flex align-items-center justify-content-center rounded-3"
+                   style="width:96px;height:72px;background:#f6fbf8;border:1px solid #cfeadc;">
+                <i class="fa-solid fa-image text-success"></i>
+              </div>
+            {% endif %}
+            <div class="flex-grow-1">
+              <h5 class="mb-1 fw-bold">{{ c.nombre }}</h5>
+              <div class="small text-muted">{{ c.direccion }}</div>
+              <div class="small">
+                <span class="badge bg-success-subtle text-success border">{{ c.tipo_cancha.nombre }}</span>
+                <span class="ms-2 text-secondary small">
+                  {{ c.hora_inicio|time:"H:i" }}–{{ c.hora_fin|time:"H:i" }}
+                </span>
+              </div>
+              {% if c.precio %}
+                <div class="mt-1 fw-semibold text-success">$ {{ c.precio|floatformat:0 }}</div>
+              {% endif %}
+            </div>
+          </div>
         </div>
         <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+          <a href="{% url 'cancha_edit' c.id_cancha %}" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+
+          <!-- Botón eliminar con SweetAlert -->
+          <a href="{% url 'cancha_delete' c.id_cancha %}"
+             class="btn btn-outline-danger btn-sm flex-fill btn-eliminar"
+             data-nombre="{{ c.nombre }}">
+             Eliminar
+          </a>
         </div>
       </div>
     </div>
-
-    <!-- Cancha 2 (demo) -->
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Cancha 2 · Futbolito</h5>
-          <small class="text-muted d-block">Camino El Alba 1200, Las Condes</small>
-          <small class="text-muted">Medidas: 50x25 · Iluminación LED</small>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Cancha 3 (demo) -->
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Cancha 3 · Multiuso</h5>
-          <small class="text-muted d-block">Av. Recoleta 3000, Recoleta</small>
-          <small class="text-muted">Medidas: 38x18 · Exterior</small>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
-    </div>
-
+    {% endfor %}
   </div>
+  {% else %}
+    <div class="alert alert-secondary">No hay canchas registradas.</div>
+  {% endif %}
 </div>
+
+<!-- SweetAlert de confirmación (usa el CDN que ya tienes en base.html) -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const botones = document.querySelectorAll(".btn-eliminar");
+
+  botones.forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const url = btn.getAttribute("href");
+      const nombre = btn.dataset.nombre;
+
+      const res = await Swal.fire({
+        title: "¿Eliminar cancha?",
+        text: `¿Seguro que deseas eliminar "${nombre}"? Esta acción no se puede deshacer.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar"
+      });
+
+      if (res.isConfirmed) {
+        fetch(url, {
+          method: "POST",
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+        }).then(response => {
+          // Si la vista redirige, seguimos la redirección
+          if (response.redirected) {
+            window.location.href = response.url;
+          } else {
+            // Si no hay redirect, recargamos la lista
+            window.location.reload();
+          }
+        }).catch(() => {
+          Swal.fire("Error", "No se pudo eliminar. Intenta nuevamente.", "error");
+        });
+      }
+    });
+  });
+
+  // Obtener CSRF token de la cookie
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let c of cookies) {
+        c = c.trim();
+        if (c.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(c.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+});
+</script>
 {% endblock %}

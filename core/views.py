@@ -10,6 +10,7 @@ from django.db import transaction
 from core.models import Usuario
 from django.http import JsonResponse
 import re
+from .forms import CanchaForm
 from .models import *
 from django.core.paginator import Paginator
 from datetime import time
@@ -574,9 +575,6 @@ def crudAdministradores(request):
 def crudUsuarios(request):
     return render(request, 'core/crudUsuarios.html')
 
-def crudCanchas(request):
-    return render(request, 'core/crudCanchas.html')
-
 def crudReservas(request):
     return render(request, 'core/crudReservas.html')
 
@@ -591,3 +589,46 @@ def crudPromociones(request):
 
 def crudHorarios(request):
     return render(request, 'core/crudHorarios.html')
+
+@login_required
+def crudCanchas(request):
+    # Reutilizamos tu nombre de vista, pero ahora enviamos datos reales
+    canchas = Cancha.objects.select_related('tipo_cancha').order_by('id_cancha')
+    return render(request, 'core/crudCanchas.html', {'canchas': canchas})
+
+@login_required
+def cancha_create(request):
+    if request.method == 'POST':
+        form = CanchaForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cancha creada correctamente.')
+            return redirect('crudCanchas')
+        messages.error(request, 'Revisa los campos del formulario.')
+    else:
+        form = CanchaForm()
+    return render(request, 'core/canchas_form.html', {'form': form, 'modo': 'Agregar'})
+
+@login_required
+def cancha_edit(request, pk):
+    cancha = get_object_or_404(Cancha, id_cancha=pk)
+    if request.method == 'POST':
+        form = CanchaForm(request.POST, request.FILES, instance=cancha)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cancha actualizada correctamente.')
+            return redirect('crudCanchas')
+        messages.error(request, 'Revisa los campos del formulario.')
+    else:
+        form = CanchaForm(instance=cancha)
+    return render(request, 'core/canchas_form.html', {'form': form, 'modo': 'Editar', 'cancha': cancha})
+
+@login_required
+def cancha_delete(request, pk):
+    cancha = get_object_or_404(Cancha, id_cancha=pk)
+    if request.method == 'POST':
+        cancha.delete()
+        messages.success(request, 'Cancha eliminada correctamente.')
+        return redirect('crudCanchas')
+    # Si llega por GET (p.ej. alguien pega la URL), vuelve a la lista
+    return redirect('crudCanchas')

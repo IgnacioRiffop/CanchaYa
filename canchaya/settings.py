@@ -97,11 +97,13 @@ DATABASES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.oracle',
-        'NAME': 'localhost:1521/orclpdb', 
-        'USER': 'canchaya', 
-        'PASSWORD': '12345',
+        'NAME': 'localhost:1521/ORCLPDB',  # tu PDB real
+        'USER': 'CANCHAYA',
+        'PASSWORD': 'NuevaClave123',
     }
 }
+
+
 
 
 #DATABASES = {
