@@ -1,0 +1,57 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Centro de Cuentas | CanchaYa{% endblock %}
+
+{% block contenido %}
+<div class="container py-5">
+  <h1 class="fw-bold mb-4">Gestion Comercial</h1>
+
+  <div class="row g-4">
+
+    <div class="col-12 col-md-6">
+      <div class="cc-card h-100 p-4">
+        <h5 class="fw-bold mb-1">Canchas</h5>
+        <a href="{% url 'crudCanchas' %}" class="btn btn-primary">Ver</a>
+      </div>
+    </div>
+
+
+    <div class="col-12 col-md-6">
+      <div class="cc-card h-100 p-4">
+        <h5 class="fw-bold mb-1">Tarifas</h5>
+        <a href="{% url 'crudTarifas' %}" class="btn btn-primary">Ver</a>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6">
+      <div class="cc-card h-100 p-4">
+        <h5 class="fw-bold mb-1">Horarios</h5>
+        <a href="{% url 'crudHorarios' %}" class="btn btn-primary">Ver</a>
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <div class="cc-card h-100 p-4">
+        <h5 class="fw-bold mb-1">Promociones</h5>
+        <a href="{% url 'crudPromociones' %}" class="btn btn-primary">Ver</a>
+      </div>
+    </div>
+
+        <div class="col-12 col-md-6">
+      <div class="cc-card h-100 p-4">
+        <h5 class="fw-bold mb-1">Reservas</h5>
+        <a href="{% url 'crudReservas' %}" class="btn btn-primary">Ver</a>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6">
+      <div class="cc-card h-100 p-4">
+        <h5 class="fw-bold mb-1">Equipamientos</h5>
+        <a href="{% url 'crudEquipamientos' %}" class="btn btn-primary">Ver</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+

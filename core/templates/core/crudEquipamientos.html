@@ -1,0 +1,70 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Equipamiento | CanchaYa{% endblock %}
+
+{% block contenido %}
+<div class="container py-5">
+
+  <!-- Header + Agregar -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Equipamiento</h1>
+      <p class="text-muted m-0">Listado de equipamiento (visual, con acciones rápidas).</p>
+    </div>
+    <a href="#" class="btn btn-success fw-semibold">
+      <i class="fa-solid fa-plus me-2"></i> Agregar
+    </a>
+  </div>
+
+  <!-- Grid de tarjetas -->
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+
+    <!-- Item demo 1 -->
+    <div class="col">
+      <div class="cu-item-card h-100 d-flex flex-column">
+        <div class="cu-item-body">
+          <h5 class="mb-1 fw-bold">Balones N°5</h5>
+          <small class="text-muted d-block">Tipo: Fútbol</small>
+          <small class="text-muted">Stock: 12 · Estado: Bueno</small>
+        </div>
+        <div class="mt-auto d-flex gap-2 pt-3">
+          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item demo 2 -->
+    <div class="col">
+      <div class="cu-item-card h-100 d-flex flex-column">
+        <div class="cu-item-body">
+          <h5 class="mb-1 fw-bold">Petos Verdes</h5>
+          <small class="text-muted d-block">Talla: Única</small>
+          <small class="text-muted">Stock: 20 · Estado: Muy bueno</small>
+        </div>
+        <div class="mt-auto d-flex gap-2 pt-3">
+          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item demo 3 -->
+    <div class="col">
+      <div class="cu-item-card h-100 d-flex flex-column">
+        <div class="cu-item-body">
+          <h5 class="mb-1 fw-bold">Conos de Entrenamiento</h5>
+          <small class="text-muted d-block">Set de 30</small>
+          <small class="text-muted">Stock: 5 · Estado: Bueno</small>
+        </div>
+        <div class="mt-auto d-flex gap-2 pt-3">
+          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

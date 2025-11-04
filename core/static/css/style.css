@@ -671,3 +671,74 @@ body {
     flex-direction: column;
   }
 }
+/* ===========================
+   💼 Centro de Cuentas (tarjetas blancas con borde verde)
+=========================== */
+main .cc-card {
+  background-color: #ffffff;
+  border: 2px solid #28a745;
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+main .cc-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+  border-color: #23963f;
+}
+
+main .cc-card h5 {
+  color: #198754;
+}
+
+main .cc-card p {
+  color: #555;
+}
+/* ===========================
+   💼 Tarjetas CRUD (igual estilo que centro de cuentas)
+=========================== */
+.cu-item-card {
+  background-color: #ffffff;
+  border: 2px solid #28a745;        /* mismo verde del sitio */
+  border-radius: 16px;
+  padding: 1.2rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.cu-item-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+  border-color: #23963f;            /* verde más oscuro al hover */
+}
+
+.cu-item-card h5 {
+  color: #198754;                   /* título verde */
+  font-weight: 700;
+}
+
+.cu-item-card small {
+  color: #6c757d;
+}
+
+.btn-outline-secondary {
+  color: #198754;
+  border: 1px solid #cfeadc;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #198754;
+  color: #fff;
+  border-color: #198754;
+}
+
+.btn-outline-danger {
+  border: 1px solid #dc3545;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: #fff;
+}
+

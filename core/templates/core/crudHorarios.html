@@ -1,0 +1,59 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Horarios | CanchaYa{% endblock %}
+
+{% block contenido %}
+<div class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Horarios</h1>
+      <p class="text-muted m-0">Bloques disponibles por día.</p>
+    </div>
+    <a href="#" class="btn btn-success fw-semibold">
+      <i class="fa-solid fa-plus me-2"></i> Agregar
+    </a>
+  </div>
+
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+    <div class="col">
+      <div class="cu-item-card h-100 d-flex flex-column">
+        <div class="cu-item-body">
+          <h5 class="mb-1 fw-bold">Lunes · 16:00–22:00</h5>
+          <small class="text-muted">Bloques de 60 min</small>
+        </div>
+        <div class="mt-auto d-flex gap-2 pt-3">
+          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="cu-item-card h-100 d-flex flex-column">
+        <div class="cu-item-body">
+          <h5 class="mb-1 fw-bold">Miércoles · 10:00–18:00</h5>
+          <small class="text-muted">Bloques de 90 min</small>
+        </div>
+        <div class="mt-auto d-flex gap-2 pt-3">
+          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="cu-item-card h-100 d-flex flex-column">
+        <div class="cu-item-body">
+          <h5 class="mb-1 fw-bold">Sábado · 09:00–14:00</h5>
+          <small class="text-muted">Bloques de 60 min</small>
+        </div>
+        <div class="mt-auto d-flex gap-2 pt-3">
+          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

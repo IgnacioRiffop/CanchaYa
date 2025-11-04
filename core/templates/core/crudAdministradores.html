@@ -1,0 +1,61 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Vendedores | CanchaYa{% endblock %}
+
+{% block contenido %}
+<div class="container py-5">
+
+  <!-- Header + Agregar -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Administradores</h1>
+    </div>
+    <a href="#" class="btn btn-success fw-semibold">
+      <i class="fa-solid fa-plus me-2"></i> Agregar
+    </a>
+  </div>
+
+  <!-- Grid de tarjetas -->
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+    <!-- Item demo 1 -->
+    <div class="col">
+      <div class="cu-item-card h-100 d-flex flex-column">
+        <div class="cu-item-body">
+          <h5 class="mb-1 fw-bold">Fabian Vera Riffo</h5>
+        </div>
+        <div class="mt-auto d-flex gap-2 pt-3">
+          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item demo 2 -->
+    <div class="col">
+      <div class="cu-item-card h-100 d-flex flex-column">
+        <div class="cu-item-body">
+          <h5 class="mb-1 fw-bold">Francisco Espinosa Galvez</h5>
+        </div>
+        <div class="mt-auto d-flex gap-2 pt-3">
+          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item demo 3 -->
+    <div class="col">
+      <div class="cu-item-card h-100 d-flex flex-column">
+        <div class="cu-item-body">
+          <h5 class="mb-1 fw-bold">Daniel Aravena Toro</h5>
+        </div>
+        <div class="mt-auto d-flex gap-2 pt-3">
+          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Canchas | CanchaYa{% endblock %}
+
+{% block contenido %}
+<div class="container py-5">
+
+  <!-- Header + Agregar -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Canchas</h1>
+      <p class="text-muted m-0">Listado de canchas (visual, con acciones rápidas).</p>
+    </div>
+    <a href="#" class="btn btn-success fw-semibold">
+      <i class="fa-solid fa-plus me-2"></i> Agregar
+    </a>
+  </div>
+
+  <!-- Grid de tarjetas -->
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+
+    <!-- Cancha 1 (demo) -->
+    <div class="col">
+      <div class="cu-item-card h-100 d-flex flex-column">
+        <div class="cu-item-body">
+          <h5 class="mb-1 fw-bold">Cancha 1 · Pasto Sintético</h5>
+          <small class="text-muted d-block">Av. Siempre Viva 742, Maipú</small>
+          <small class="text-muted">Medidas: 40x20 · Techada</small>
+        </div>
+        <div class="mt-auto d-flex gap-2 pt-3">
+          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cancha 2 (demo) -->
+    <div class="col">
+      <div class="cu-item-card h-100 d-flex flex-column">
+        <div class="cu-item-body">
+          <h5 class="mb-1 fw-bold">Cancha 2 · Futbolito</h5>
+          <small class="text-muted d-block">Camino El Alba 1200, Las Condes</small>
+          <small class="text-muted">Medidas: 50x25 · Iluminación LED</small>
+        </div>
+        <div class="mt-auto d-flex gap-2 pt-3">
+          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cancha 3 (demo) -->
+    <div class="col">
+      <div class="cu-item-card h-100 d-flex flex-column">
+        <div class="cu-item-body">
+          <h5 class="mb-1 fw-bold">Cancha 3 · Multiuso</h5>
+          <small class="text-muted d-block">Av. Recoleta 3000, Recoleta</small>
+          <small class="text-muted">Medidas: 38x18 · Exterior</small>
+        </div>
+        <div class="mt-auto d-flex gap-2 pt-3">
+          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

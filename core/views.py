@@ -553,3 +553,41 @@ def api_horarios_ocupados(request):
         'horarios_disponibles': horarios_disponibles,
         'horarios_ocupados': horarios_ocupados
     })
+
+def centroGestion(request):
+    return render(request, 'core/centroGestion.html')
+
+def gestionComercial(request):
+    return render(request, 'core/gestionComercial.html')
+
+def gestionCuentas(request):
+    return render(request, 'core/gestionCuentas.html')
+
+def crudOperadores(request):
+    return render(request, 'core/crudOperadores.html')
+
+
+def crudAdministradores(request):
+    return render(request, 'core/crudAdministradores.html')
+
+
+def crudUsuarios(request):
+    return render(request, 'core/crudUsuarios.html')
+
+def crudCanchas(request):
+    return render(request, 'core/crudCanchas.html')
+
+def crudReservas(request):
+    return render(request, 'core/crudReservas.html')
+
+def crudEquipamientos(request):
+    return render(request, 'core/crudEquipamientos.html')
+
+def crudTarifas(request):
+    return render(request, 'core/crudTarifas.html')
+
+def crudPromociones(request):
+    return render(request, 'core/crudPromociones.html')
+
+def crudHorarios(request):
+    return render(request, 'core/crudHorarios.html')
