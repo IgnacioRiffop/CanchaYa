@@ -5,3 +5,4 @@ django-jazzmin
 pillow
 cx_Oracle
 oracledb
+stripe

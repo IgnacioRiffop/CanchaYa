@@ -17,6 +17,8 @@ from datetime import time
 from datetime import date, timedelta
 from datetime import datetime
 import json
+import stripe
+from django.conf import settings
 
 
 def contacto(request):
@@ -576,6 +578,37 @@ def api_horarios_ocupados(request):
         'horarios_disponibles': horarios_disponibles,
         'horarios_ocupados': horarios_ocupados
     })
+    
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+def crear_checkout(request):
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{
+            'price_data': {
+                'currency': 'clp',
+                'product_data': {
+                    'name': 'Reserva de Cancha',
+                },
+                'unit_amount': 5000,  # en centavos (5000 CLP)
+            },
+            'quantity': 1,
+        }],
+        mode='payment',
+        success_url='http://127.0.0.1:8000/pago_exitoso/',
+        cancel_url='http://127.0.0.1:8000/pago_fallido/',
+    )
+    return redirect(session.url, code=303)
+
+
+def pago_exitoso(request):
+    return render(request, 'core/pago_exitoso.html')
+
+def pago_fallido(request):
+    return render(request, 'core/pago_fallido.html')
+
+
 
 def centroGestion(request):
     return render(request, 'core/centroGestion.html')
