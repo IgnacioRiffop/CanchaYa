@@ -93,7 +93,7 @@ DATABASES = {
     #}
 #}
 
-
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.oracle',
@@ -102,20 +102,20 @@ DATABASES = {
         'PASSWORD': 'NuevaClave123',
     }
 }
+"""
 
 
 
-
-#DATABASES = {
- #   'default': {
-  #      'ENGINE': 'django.db.backends.oracle',
-   #     'NAME': 'ORCL',        # Tu SID o service name de Oracle
-    #    'USER': 'USUARIO',      # Usuario de Oracle
-    #   'PASSWORD': '12345',   # Contraseña del usuario
-     #  'HOST': 'localhost',   # Dirección del servidor Oracle
-      #  'PORT': '1521',        # Puerto del listener
-    #}
-#}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.oracle',
+        'NAME': 'ORCL',        # Tu SID o service name de Oracle
+        'USER': 'USUARIO',      # Usuario de Oracle
+        'PASSWORD': '12345',   # Contraseña del usuario
+        'HOST': 'localhost',   # Dirección del servidor Oracle
+        'PORT': '1521',        # Puerto del listener
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators

@@ -57,7 +57,7 @@
       </div>
     </div>
 
-    <!-- Selección de fecha y horarios disponibles -->
+    <!-- Selección de fecha y horarios -->
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <h5 class="card-title mb-3">Selecciona un día y horarios</h5>
@@ -68,29 +68,16 @@
               max="{{ fecha_max|date:'Y-m-d' }}"
               value="{{ fecha_seleccionada|date:'Y-m-d' }}">
 
-        <!-- Horarios -->
-        <div class="d-flex flex-wrap" id="horarios-container">
-          {% for horario in horarios_disponibles %}
-            {% if horario.id_horario in horarios_ocupados %}
-              <button class="btn btn-secondary m-1" disabled>
-                {{ horario.hora_inicio|time:"H:i" }} - {{ horario.hora_fin|time:"H:i" }}
-              </button>
-            {% else %}
-              <button class="btn btn-outline-success m-1 horario-btn" data-id="{{ horario.id_horario }}">
-                {{ horario.hora_inicio|time:"H:i" }} - {{ horario.hora_fin|time:"H:i" }}
-              </button>
-            {% endif %}
-          {% endfor %}
-        </div>
+        <!-- Contenedor dinámico de horarios -->
+        <div class="d-flex flex-wrap" id="horarios-container"></div>
+      </div>
+    </div>
 
-    <br>
-    
     <!-- Equipamiento adicional -->
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <h5 class="card-title mb-4">Equipamiento Adicional</h5>
 
-        <!-- Selector de equipamiento -->
         <div class="mb-3">
           <select id="select-equipamiento" class="form-select">
             <option value="" selected>-- Selecciona un equipamiento --</option>
@@ -103,12 +90,10 @@
           <button type="button" id="btn-agregar-equip" class="btn btn-outline-success mt-2">Agregar</button>
         </div>
 
-        <!-- Contenedor de equipamientos seleccionados -->
         <div id="equipamientos-seleccionados"></div>
-
       </div>
     </div>
-    
+
     <!-- Código promocional -->
     <div class="card shadow-sm mb-4">
       <div class="card-body">
@@ -122,10 +107,8 @@
           </div>
           <small id="mensaje-promocion" class="text-success"></small>
         </div>
-
       </div>
     </div>
-
 
     <!-- Resumen de pago -->
     <div class="card shadow-sm">
@@ -154,7 +137,6 @@
           <input type="hidden" name="equipamientos" id="equipamientos-input" value="">
           <input type="hidden" name="codigo_promocion" id="codigo-promocion" value="">  
 
-          <!-- ✅ botón dentro del form -->
           <div class="text-center mt-4">
             <button type="submit" class="btn btn-success btn-lg px-5" id="btn-confirmar">
               Confirmar Reserva
@@ -169,43 +151,48 @@
 </main>
 
 
+
 <!-- Cargar el JS según tu ruta -->
 <script src="{% static 'js/reserva.js' %}"></script>
 
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<script id="horarios_iniciales" type="application/json">
+  {{ horarios_disponibles|json_script:"horarios_iniciales" }}
+</script>
+<script id="ocupados_iniciales" type="application/json">
+  {{ horarios_ocupados|json_script:"ocupados_iniciales" }}
+</script>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
   const precioCancha = {{ cancha.precio }};
-  let horariosBtns = document.querySelectorAll('.horario-btn');
   const horarioInput = document.getElementById('horario-id');
   const subtotalElem = document.getElementById('subtotal');
   const totalElem = document.getElementById('total');
   const descuentoElem = document.getElementById('descuento');
   const equipamientosInput = document.getElementById('equipamientos-input');
-  const codigoPromoInputHidden = document.getElementById('codigo-promocion'); // ✅
-
+  const codigoPromoInputHidden = document.getElementById('codigo-promocion');
   const promoInput = document.getElementById('promo-codigo');
   const mensajePromo = document.getElementById('mensaje-promocion');
   const btnAplicarPromo = document.getElementById('btn-aplicar-promo');
+  const selectEquip = document.getElementById('select-equipamiento');
+  const btnAgregar = document.getElementById('btn-agregar-equip');
+  const contenedorEquip = document.getElementById('equipamientos-seleccionados');
+  const fechaInput = document.getElementById('fecha');
+  const fechaHidden = document.getElementById('fecha-hidden');
 
   const equipCantidades = {};
+  let promocion = null;
+  let horariosBtns = [];
+
   const equipamientosDisponibles = [
     {% for equipamiento in equipamientos_disponibles %}
       {id: '{{ equipamiento.id_equipamiento }}', nombre: '{{ equipamiento.nombre }}', precio: {{ equipamiento.precio }} },
     {% endfor %}
   ];
-
-  const selectEquip = document.getElementById('select-equipamiento');
-  const btnAgregar = document.getElementById('btn-agregar-equip');
-  const contenedorEquip = document.getElementById('equipamientos-seleccionados');
-
-  const fechaInput = document.getElementById('fecha');
-  const fechaHidden = document.getElementById('fecha-hidden');
-
-  let promocion = null;
 
   // ---------- Función para actualizar total ----------
   function actualizarTotal() {
@@ -222,34 +209,101 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let descuento = 0;
     if (promocion && subtotal > 0) {
-      if (promocion.descuento_porcentaje) {
+      if (promocion.descuento_porcentaje)
         descuento = subtotal * promocion.descuento_porcentaje / 100;
-      } else if (promocion.descuento_fijo) {
+      else if (promocion.descuento_fijo)
         descuento = promocion.descuento_fijo;
-      }
-      if (descuento > subtotal) descuento = subtotal; // nunca negativo
+      if (descuento > subtotal) descuento = subtotal;
     }
 
     const total = subtotal - descuento;
+    const redondear = num => Math.round(num * 100) / 100;
 
-    // ✅ Redondear montos
-    const redondear = (num) => Math.round(num * 100) / 100;
     subtotalElem.textContent = `$${redondear(subtotal)}`;
     descuentoElem.textContent = `$${redondear(descuento)}`;
     totalElem.textContent = `$${redondear(total)}`;
 
-    // Animar actualización del total (suave UX)
+    equipamientosInput.value = JSON.stringify(equipCantidades);
+
     totalElem.classList.add('fw-bold', 'text-success', 'animate__animated', 'animate__pulse');
     setTimeout(() => totalElem.classList.remove('animate__animated', 'animate__pulse'), 700);
+  }
 
-    equipamientosInput.value = JSON.stringify(equipCantidades);
+  // ---------- Renderizar horarios ----------
+  function renderHorarios(horarios_disponibles, horarios_ocupados) {
+    const contenedor = document.getElementById('horarios-container');
+    contenedor.innerHTML = '';
+    horariosBtns = [];
+
+    horarios_disponibles.forEach(h => {
+      const btn = document.createElement('button');
+      btn.textContent = `${h.hora_inicio} - ${h.hora_fin}`;
+      btn.dataset.id = h.id_horario;
+
+      if (horarios_ocupados.includes(h.id_horario)) {
+        btn.className = 'btn btn-secondary m-1';
+        btn.disabled = true;
+      } else {
+        btn.className = 'btn btn-outline-success m-1 horario-btn';
+        btn.addEventListener('click', () => {
+          horariosBtns.forEach(b => {
+            b.classList.remove('btn-success', 'activo');
+            b.classList.add('btn-outline-success');
+          });
+          btn.classList.remove('btn-outline-success');
+          btn.classList.add('btn-success', 'activo');
+          horarioInput.value = btn.dataset.id;
+          actualizarTotal();
+        });
+      }
+
+      contenedor.appendChild(btn);
+      if (!btn.disabled) horariosBtns.push(btn);
+    });
+
+    horarioInput.value = '';
+    actualizarTotal();
+  }
+
+  // ---------- Cargar horarios desde API ----------
+  function cargarHorarios(fecha) {
+    fetch(`/api/horarios_ocupados/?cancha_id={{ cancha.id_cancha }}&fecha=${fecha}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data || data.error) {
+          console.error(data?.error || 'Error al obtener horarios');
+          return;
+        }
+        renderHorarios(data.horarios_disponibles, data.horarios_ocupados);
+      })
+      .catch(err => console.error('Error cargando horarios:', err));
+  }
+
+  // ---------- Al cambiar la fecha ----------
+  fechaInput.addEventListener('change', () => {
+    const fecha = fechaInput.value;
+    fechaHidden.value = fecha;
+    cargarHorarios(fecha);
+  });
+
+  // ---------- Inicializar con horarios iniciales o cargar si están vacíos ----------
+  try {
+    const horariosIniciales = JSON.parse(document.getElementById('horarios_iniciales').textContent);
+    const horariosOcupadosIniciales = JSON.parse(document.getElementById('ocupados_iniciales').textContent);
+    if (horariosIniciales && horariosIniciales.length > 0) {
+      renderHorarios(horariosIniciales, horariosOcupadosIniciales);
+    } else {
+      cargarHorarios(fechaInput.value);
+    }
+  } catch (err) {
+    console.warn('Error leyendo JSON inicial, se cargan desde API.');
+    cargarHorarios(fechaInput.value);
   }
 
   // ---------- Agregar equipamiento ----------
   btnAgregar.addEventListener('click', () => {
     const selectedId = selectEquip.value;
-    if (!selectedId) return;
-    if (document.getElementById(`equip-${selectedId}`)) return;
+    if (!selectedId || document.getElementById(`equip-${selectedId}`)) return;
 
     const equip = equipamientosDisponibles.find(e => e.id === selectedId);
     equipCantidades[selectedId] = 0;
@@ -257,7 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const div = document.createElement('div');
     div.classList.add('d-flex', 'justify-content-between', 'align-items-center', 'mb-3');
     div.id = `equip-${selectedId}`;
-
     div.innerHTML = `
       <div>
         <strong>${equip.nombre}</strong><br>
@@ -281,73 +334,8 @@ document.addEventListener('DOMContentLoaded', () => {
         actualizarTotal();
       });
     });
-
     actualizarTotal();
   });
-
-  // ---------- Función para renderizar horarios ----------
-  function renderHorarios(horarios_disponibles, horarios_ocupados) {
-    const horariosContainer = document.getElementById('horarios-container');
-    horariosContainer.innerHTML = '';
-    horariosBtns = [];
-
-    horarios_disponibles.forEach(horario => {
-      const btn = document.createElement('button');
-      btn.textContent = `${horario.hora_inicio} - ${horario.hora_fin}`;
-      if (horarios_ocupados.includes(horario.id_horario)) {
-        btn.className = 'btn btn-secondary m-1';
-        btn.disabled = true;
-      } else {
-        btn.className = 'btn btn-outline-success m-1 horario-btn';
-        btn.dataset.id = horario.id_horario;
-        btn.addEventListener('click', () => {
-          horariosBtns.forEach(b => {
-            b.classList.remove('btn-success', 'activo');
-            b.classList.add('btn-outline-success');
-          });
-          btn.classList.remove('btn-outline-success');
-          btn.classList.add('btn-success', 'activo');
-          horarioInput.value = btn.dataset.id;
-          actualizarTotal();
-        });
-      }
-      horariosContainer.appendChild(btn);
-      if (!btn.disabled) horariosBtns.push(btn);
-    });
-
-    // Limpiar selección de horario
-    horarioInput.value = '';
-    actualizarTotal();
-  }
-
-  // ---------- Actualizar horarios al cambiar fecha ----------
-  fechaInput.addEventListener('change', () => {
-    const fecha = fechaInput.value;
-    fechaHidden.value = fecha;
-
-    fetch(`/api/horarios_ocupados/?cancha_id={{ cancha.id_cancha }}&fecha=${fecha}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          Swal.fire('Error', data.error, 'error');
-          return;
-        }
-        renderHorarios(data.horarios_disponibles, data.horarios_ocupados);
-      })
-      .catch(() => {
-        Swal.fire('Error', 'No se pudo cargar los horarios para esta fecha', 'error');
-      });
-  });
-
-  // ---------- Inicializar selección de horario ----------
-  renderHorarios(
-    Array.from(horariosBtns).map(b => ({
-      id_horario: b.dataset.id,
-      hora_inicio: b.textContent.split(' - ')[0],
-      hora_fin: b.textContent.split(' - ')[1]
-    })),
-    Array.from(document.querySelectorAll('.btn-secondary')).map(b => b.dataset.id)
-  );
 
   // ---------- Aplicar promoción ----------
   btnAplicarPromo.addEventListener('click', () => {
@@ -356,7 +344,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let subtotalActual = 0;
     if (horarioInput.value) subtotalActual += precioCancha;
-    for (let id in equipCantidades) subtotalActual += (equipCantidades[id] || 0) * equipamientosDisponibles.find(e => e.id === id).precio;
+    for (let id in equipCantidades)
+      subtotalActual += (equipCantidades[id] || 0) * equipamientosDisponibles.find(e => e.id === id).precio;
 
     if (subtotalActual === 0) {
       Swal.fire('Atención', 'Selecciona un horario o equipamiento antes de aplicar la promoción', 'warning');
@@ -368,37 +357,34 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.error) {
           promocion = null;
-          codigoPromoInputHidden.value = "";
+          codigoPromoInputHidden.value = '';
           mensajePromo.textContent = data.error;
-          mensajePromo.classList.remove('text-success');
-          mensajePromo.classList.add('text-danger');
+          mensajePromo.classList.replace('text-success', 'text-danger');
           Swal.fire('Error', data.error, 'error');
         } else {
           promocion = data;
           codigoPromoInputHidden.value = codigo;
           const msg = `Descuento aplicado (${data.descuento_porcentaje ? data.descuento_porcentaje + '%' : '$' + data.descuento_fijo}).`;
           mensajePromo.textContent = msg;
-          mensajePromo.classList.remove('text-danger');
-          mensajePromo.classList.add('text-success');
+          mensajePromo.classList.replace('text-danger', 'text-success');
           Swal.fire('Promoción aplicada', msg, 'success');
         }
         actualizarTotal();
       })
       .catch(() => {
         promocion = null;
-        codigoPromoInputHidden.value = "";
+        codigoPromoInputHidden.value = '';
         mensajePromo.textContent = 'No se pudo validar la promoción';
-        mensajePromo.classList.remove('text-success');
-        mensajePromo.classList.add('text-danger');
+        mensajePromo.classList.replace('text-success', 'text-danger');
         Swal.fire('Error', 'No se pudo validar la promoción', 'error');
         actualizarTotal();
       });
   });
 
-  // Inicializar total
   actualizarTotal();
 });
 </script>
+
 
 
 

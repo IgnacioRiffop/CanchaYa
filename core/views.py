@@ -358,7 +358,6 @@ def editar_perfil(request):
     return JsonResponse({'ok': False, 'msg': 'Método inválido.'})
 
 
-
 def reserva(request, id_cancha):
     cancha = get_object_or_404(Cancha, pk=id_cancha)
     equipamientos_disponibles = Equipamiento.objects.filter(tipos_cancha=cancha.tipo_cancha)
@@ -377,24 +376,34 @@ def reserva(request, id_cancha):
     else:
         fecha_seleccionada = hoy
 
-    # Obtener horarios dentro del rango de la cancha
-    horarios_disponibles = Horario.objects.filter(
+    # 🟩 Obtener horarios dentro del rango de la cancha y convertir a lista serializable
+    horarios_qs = Horario.objects.filter(
         hora_inicio__gte=cancha.hora_inicio,
         hora_fin__lte=cancha.hora_fin
     ).order_by('hora_inicio')
 
-    # Obtener horarios ocupados para la fecha seleccionada
+    horarios_disponibles = [
+        {
+            "id_horario": h.id_horario,
+            "hora_inicio": h.hora_inicio.strftime("%H:%M"),
+            "hora_fin": h.hora_fin.strftime("%H:%M")
+        }
+        for h in horarios_qs
+    ]
+
+    # 🟩 Obtener horarios ocupados para la fecha seleccionada (solo IDs)
     reservas_ocupadas = Reserva.objects.filter(
         cancha=cancha,
         fecha=fecha_seleccionada,
         estado='A'  # solo reservas activas
     ).values_list('horario_id', flat=True)
+
     horarios_ocupados = list(reservas_ocupadas)
 
     context = {
         'cancha': cancha,
-        'horarios_disponibles': horarios_disponibles,
-        'horarios_ocupados': horarios_ocupados,
+        'horarios_disponibles': horarios_disponibles,  # ✅ lista serializable
+        'horarios_ocupados': horarios_ocupados,        # ✅ lista simple
         'fecha_actual': hoy,
         'fecha_max': fecha_max,
         'fecha_seleccionada': fecha_seleccionada,
@@ -523,33 +532,46 @@ def api_horarios_ocupados(request):
     cancha_id = request.GET.get('cancha_id')
     fecha_str = request.GET.get('fecha')
 
+    # 🟥 Validar parámetros obligatorios
     if not cancha_id or not fecha_str:
-        return JsonResponse({'error': 'Faltan parámetros'}, status=400)
+        return JsonResponse({'error': 'Faltan parámetros (cancha_id o fecha).'}, status=400)
 
     try:
         fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
-        cancha = Cancha.objects.get(id_cancha=cancha_id)
-    except (ValueError, Cancha.DoesNotExist):
-        return JsonResponse({'error': 'Parámetros inválidos'}, status=400)
+    except ValueError:
+        return JsonResponse({'error': 'Formato de fecha inválido (usar YYYY-MM-DD).'}, status=400)
 
-    # Horarios de la cancha
-    horarios_disponibles = list(Horario.objects.filter(
+    # 🟨 Verificar existencia de cancha
+    try:
+        cancha = Cancha.objects.get(id_cancha=cancha_id)
+    except Cancha.DoesNotExist:
+        return JsonResponse({'error': 'La cancha no existe.'}, status=404)
+
+    # 🟩 Obtener horarios disponibles dentro del rango de la cancha
+    horarios_qs = Horario.objects.filter(
         hora_inicio__gte=cancha.hora_inicio,
         hora_fin__lte=cancha.hora_fin
-    ).order_by('hora_inicio').values('id_horario', 'hora_inicio', 'hora_fin'))
+    ).order_by('hora_inicio')
 
-    # Horarios ocupados en esa fecha
-    horarios_ocupados = list(Reserva.objects.filter(
-        cancha=cancha,
-        fecha=fecha,
-        estado='A'
-    ).values_list('horario_id', flat=True))
+    horarios_disponibles = [
+        {
+            "id_horario": h.id_horario,
+            "hora_inicio": h.hora_inicio.strftime("%H:%M"),
+            "hora_fin": h.hora_fin.strftime("%H:%M")
+        }
+        for h in horarios_qs
+    ]
 
-    # Convertir horas a string H:i
-    for h in horarios_disponibles:
-        h['hora_inicio'] = h['hora_inicio'].strftime('%H:%M')
-        h['hora_fin'] = h['hora_fin'].strftime('%H:%M')
+    # 🟩 Obtener horarios ocupados (solo IDs)
+    horarios_ocupados = list(
+        Reserva.objects.filter(
+            cancha=cancha,
+            fecha=fecha,
+            estado='A'  # solo reservas activas
+        ).values_list('horario_id', flat=True)
+    )
 
+    # 🟩 Retornar respuesta JSON
     return JsonResponse({
         'horarios_disponibles': horarios_disponibles,
         'horarios_ocupados': horarios_ocupados
