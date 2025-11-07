@@ -1,2 +1,7 @@
-<h2>✅ Pago simulado exitoso</h2>
-<p>La reserva fue registrada correctamente.</p>
+<h2>✅ Pago exitoso</h2>
+<p><strong>Cancha:</strong> {{ reserva.cancha.nombre }}</p>
+<p><strong>Fecha:</strong> {{ reserva.fecha }}</p>
+<p><strong>Horario:</strong> {{ reserva.horario.hora_inicio }} - {{ reserva.horario.hora_fin }}</p>
+<p><strong>Subtotal:</strong> ${{ reserva.subtotal }}</p>
+<p><strong>Descuento:</strong> ${{ reserva.descuento }}</p>
+<h3><strong>Total pagado:</strong> ${{ reserva.total }}</h3>

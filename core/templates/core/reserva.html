@@ -129,13 +129,16 @@
           <h5 id="total" class="fw-bold text-success">$0</h5>
         </div>
 
-        <form id="form-reserva" method="POST" action="{% url 'confirmar_reserva' %}">
+        <form id="form-reserva" method="POST" action="{% url 'crear_checkout' %}">
           {% csrf_token %}
           <input type="hidden" name="cancha_id" value="{{ cancha.id_cancha }}">
           <input type="hidden" name="fecha" id="fecha-hidden" value="{{ fecha_seleccionada|default:fecha_actual|date:'Y-m-d' }}">
           <input type="hidden" name="horario_id" id="horario-id" value="">
           <input type="hidden" name="equipamientos" id="equipamientos-input" value="">
           <input type="hidden" name="codigo_promocion" id="codigo-promocion" value="">  
+          <input type="hidden" name="subtotal" id="subtotal-hidden" value="0">
+          <input type="hidden" name="descuento" id="descuento-hidden" value="0">
+          <input type="hidden" name="total" id="total-hidden" value="0">
 
           <div class="text-center mt-4">
             <button type="submit" class="btn btn-success btn-lg px-5" id="btn-confirmar">
@@ -184,6 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const fechaInput = document.getElementById('fecha');
   const fechaHidden = document.getElementById('fecha-hidden');
 
+  // 👇 Nuevos inputs ocultos para Stripe
+  const subtotalHidden = document.getElementById('subtotal-hidden');
+  const descuentoHidden = document.getElementById('descuento-hidden');
+  const totalHidden = document.getElementById('total-hidden');
+
   const equipCantidades = {};
   let promocion = null;
   let horariosBtns = [];
@@ -222,6 +230,11 @@ document.addEventListener('DOMContentLoaded', () => {
     subtotalElem.textContent = `$${redondear(subtotal)}`;
     descuentoElem.textContent = `$${redondear(descuento)}`;
     totalElem.textContent = `$${redondear(total)}`;
+
+    // 👇 Actualizar los valores ocultos para el form
+    subtotalHidden.value = redondear(subtotal);
+    descuentoHidden.value = redondear(descuento);
+    totalHidden.value = redondear(total);
 
     equipamientosInput.value = JSON.stringify(equipCantidades);
 
@@ -286,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarHorarios(fecha);
   });
 
-  // ---------- Inicializar con horarios iniciales o cargar si están vacíos ----------
+  // ---------- Inicializar con horarios iniciales ----------
   try {
     const horariosIniciales = JSON.parse(document.getElementById('horarios_iniciales').textContent);
     const horariosOcupadosIniciales = JSON.parse(document.getElementById('ocupados_iniciales').textContent);
@@ -384,6 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
   actualizarTotal();
 });
 </script>
+
 
 
 
