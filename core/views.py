@@ -510,11 +510,46 @@ def cuenta(request):
 def modificarCuenta(request):
     return render(request, 'core/modificarCuenta.html')
 
-def historialReserva(request):
-    return render(request, 'core/historialReserva.html')
 
-def detalleReserva(request):
-    return render(request, 'core/detalleReserva.html')
+def historialReserva(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        messages.error(request, "Debes iniciar sesión para ver tus reservas.")
+        return redirect('login')
+
+    usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+    
+    reservas_list = (
+        Reserva.objects
+        .filter(usuario=usuario)
+        .select_related('cancha', 'horario', 'promocion')
+        .prefetch_related('reservaequipamiento_set__equipamiento')
+        .order_by('-fecha', '-horario__hora_inicio')
+    )
+
+    # 🔹 Paginación igual que en canchas (5 por página)
+    paginator = Paginator(reservas_list, 5)
+    page_number = request.GET.get('page')
+    reservas = paginator.get_page(page_number)
+
+    return render(request, 'core/historialReserva.html', {'reservas': reservas})
+
+def detalleReserva(request, id_reserva):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        messages.error(request, "Debes iniciar sesión para ver el detalle de tu reserva.")
+        return redirect('login')
+
+    reserva = get_object_or_404(
+        Reserva.objects
+        .select_related('cancha', 'horario', 'promocion')
+        .prefetch_related('reservaequipamiento_set__equipamiento'),
+        id_reserva=id_reserva,
+        usuario_id=usuario_id
+    )
+
+    return render(request, 'core/detalleReserva.html', {'reserva': reserva})
+
 
 def validar_promocion(request, codigo):
     try:
