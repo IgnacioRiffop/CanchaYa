@@ -1,2 +1,47 @@
-<h2>❌ Error en el pago</h2>
-<p>Hubo un problema con la transacción.</p>
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Pago Fallido | CanchaYa{% endblock %}
+
+{% block contenido %}
+<div class="container py-5">
+
+  <!-- ❌ Encabezado -->
+  <div class="text-center mb-5">
+    <h1 class="fw-bold text-danger">Pago No Completado</h1>
+    <p class="text-muted">Ocurrió un problema al procesar tu pago. Tu reserva no ha sido confirmada.</p>
+  </div>
+
+  <!-- ⚠️ Información -->
+  <div class="card shadow-sm p-4 rounded-4 mx-auto" style="max-width: 700px;">
+    <div class="d-flex align-items-center mb-4">
+      <div>
+        <h4 class="fw-bold text-danger mb-1">Transacción fallida</h4>
+        <p class="text-muted small mb-0">Puede haber ocurrido por uno de los siguientes motivos:</p>
+        <ul class="small text-secondary mt-2 mb-0">
+          <li>La tarjeta no tiene fondos suficientes.</li>
+          <li>Los datos de la tarjeta son incorrectos.</li>
+          <li>Se canceló manualmente el pago en Stripe.</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- 💡 Recomendación -->
+    <div class="alert alert-warning text-center">
+      <strong>Recomendación:</strong> puedes intentar nuevamente realizar el pago o verificar tu método de pago.
+    </div>
+
+    <!-- 🔁 Botones -->
+    <div class="text-center mt-4">
+      <a href="{% url 'canchas' %}" class="btn btn-success btn-lg px-5">
+        Volver a Canchas
+      </a>
+      <a href="{% url 'historialReserva' %}" class="btn btn-outline-success btn-lg px-5 ms-2">
+        Ir a mis reservas
+      </a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
