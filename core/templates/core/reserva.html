@@ -303,38 +303,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- 🌤️ API del clima ----------
   function obtenerClima(lat, lon) {
-    const fecha = document.getElementById('fecha').value;
+    const fecha = fechaInput.value;
+    const infoClima = document.getElementById('info-clima');
+    const descElem = document.getElementById('clima-descripcion');
+    const tempElem = document.getElementById('clima-temp');
+    const iconElem = document.getElementById('clima-icono');
+
     fetch(`/api/clima/?lat=${lat}&lon=${lon}&fecha=${fecha}`)
       .then(res => res.json())
       .then(data => {
-        const infoClima = document.getElementById('info-clima');
-        const descElem = document.getElementById('clima-descripcion');
-        const tempElem = document.getElementById('clima-temp');
-        const iconElem = document.getElementById('clima-icono');
-
         if (data.error) {
           infoClima.style.display = 'none';
           return;
         }
 
-        // ⚠️ Si el servidor devuelve una advertencia (fecha > 5 días)
+        infoClima.style.display = 'flex';
+
+        // ⚠️ Caso: fuera del rango de 5 días
         if (data.advertencia) {
-          infoClima.style.display = 'flex';
           descElem.textContent = data.advertencia;
-          tempElem.textContent = '-';
-          iconElem.src = '';
-          iconElem.alt = 'Sin pronóstico';
+          tempElem.textContent = '';
+          iconElem.src = 'https://openweathermap.org/img/wn/50d@2x.png';
+          iconElem.alt = 'Sin pronóstico disponible';
+          iconElem.style.opacity = '0.5';
           return;
         }
 
-        // 🟢 Mostrar clima normal
-        infoClima.style.display = 'flex';
+        // 🟢 Caso: clima válido
         descElem.textContent = data.descripcion;
         tempElem.textContent = data.temperatura.toFixed(1);
         iconElem.src = `https://openweathermap.org/img/wn/${data.icono}@2x.png`;
         iconElem.alt = data.descripcion;
+        iconElem.style.opacity = '1';
       })
-      .catch(() => document.getElementById('info-clima').style.display = 'none');
+      .catch(() => {
+        infoClima.style.display = 'none';
+      });
   }
 
   // ---------- Aplicar promoción ----------
@@ -453,6 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
   actualizarTotal();
 });
 </script>
+
 
 
 
