@@ -415,92 +415,6 @@ def reserva(request, id_cancha):
     return render(request, 'core/reserva.html', context)
 
 
-
-
-def confirmar_reserva(request):
-    if request.method == "POST":
-        usuario_id = request.session.get('usuario_id')
-        if not usuario_id:
-            messages.error(request, "Debes iniciar sesión para reservar.")
-            return redirect('login')
-
-        cancha_id = request.POST.get('cancha_id')
-        fecha = request.POST.get('fecha')
-        horario_id = request.POST.get('horario_id')
-        codigo_promocion = request.POST.get('codigo_promocion', '').strip()
-        equipamientos_json = request.POST.get('equipamientos', '{}')
-
-        if not horario_id:
-            messages.error(request, "Debes seleccionar un horario.")
-            return redirect('reserva', id_cancha=cancha_id)
-
-        cancha = get_object_or_404(Cancha, id_cancha=cancha_id)
-        usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
-        horario = get_object_or_404(Horario, id_horario=horario_id)
-
-        # Verificar disponibilidad
-        if Reserva.objects.filter(cancha=cancha, fecha=fecha, horario=horario, estado='A').exists():
-            messages.error(request, "Este horario ya está reservado. Por favor selecciona otro.")
-            return redirect('reserva', id_cancha=cancha_id)
-
-        # Calcular subtotal incluyendo equipamiento
-        subtotal = cancha.precio
-        try:
-            equipamientos = json.loads(equipamientos_json)
-            for equip_id, cantidad in equipamientos.items():
-                if cantidad > 0:
-                    equip = get_object_or_404(Equipamiento, id_equipamiento=equip_id)
-                    subtotal += equip.precio * cantidad
-        except json.JSONDecodeError:
-            equipamientos = {}
-
-        # Aplicar descuento si hay código de promoción
-        descuento = 0
-        promo = None
-        if codigo_promocion:
-            try:
-                promo = Promocion.objects.get(codigo__iexact=codigo_promocion, activo=True)
-                if promo.descuento_porcentaje:
-                    descuento = subtotal * promo.descuento_porcentaje / 100
-                elif promo.descuento_fijo:
-                    descuento = promo.descuento_fijo
-                if descuento > subtotal:
-                    descuento = subtotal
-            except Promocion.DoesNotExist:
-                descuento = 0
-
-        total = subtotal - descuento
-
-        # Crear reserva
-        reserva = Reserva.objects.create(
-            fecha=fecha,
-            subtotal=subtotal,
-            descuento=descuento,
-            total=total,
-            estado='A',
-            cancha=cancha,
-            usuario=usuario,
-            horario=horario,
-            promocion=promo
-        )
-
-        # Guardar equipamientos seleccionados
-        for equip_id, cantidad in equipamientos.items():
-            if cantidad > 0:
-                equip = get_object_or_404(Equipamiento, id_equipamiento=equip_id)
-                ReservaEquipamiento.objects.create(
-                    reserva=reserva,
-                    equipamiento=equip,
-                    cantidad=cantidad
-                )
-
-        messages.success(request, f"Reserva realizada con éxito para {cancha.nombre} el {fecha} a las {horario.hora_inicio}.")
-        return redirect('index')
-
-    return redirect('index')
-
-
-
 def comprobante(request):
     return render(request, 'core/comprobante.html')
 
@@ -718,7 +632,7 @@ def pago_exitoso(request):
             messages.error(request, "Este horario se reservó mientras completabas el pago.")
             return redirect('reserva', id_cancha=cancha_id)
 
-        # 🟢 Calcular subtotal (igual que antes)
+        # 🟢 Calcular subtotal
         subtotal = cancha.precio
         try:
             equipamientos = json.loads(equipamientos_json)
@@ -746,7 +660,7 @@ def pago_exitoso(request):
 
         total = subtotal - descuento
 
-        # 🟢 Crear reserva con transacción atómica (como medida de integridad)
+        # 🟢 Crear reserva
         with transaction.atomic():
             reserva = Reserva.objects.create(
                 fecha=fecha,
@@ -760,7 +674,6 @@ def pago_exitoso(request):
                 promocion=promo
             )
 
-            # 🟢 Guardar TODOS los equipamientos seleccionados correctamente
             for equip_id, cantidad in equipamientos.items():
                 if cantidad > 0:
                     equip = get_object_or_404(Equipamiento, id_equipamiento=equip_id)
@@ -773,13 +686,15 @@ def pago_exitoso(request):
         # 🧹 Limpiar sesión temporal
         del request.session['reserva_temp']
 
-        messages.success(request, f"✅ Reserva confirmada y pagada para {cancha.nombre} el {fecha} a las {horario.hora_inicio}.")
+        # ❌ Quitamos el mensaje SweetAlert
+        # messages.success(request, f"✅ Reserva confirmada y pagada para {cancha.nombre} el {fecha} a las {horario.hora_inicio}.")
+
         return render(request, 'core/pago_exitoso.html', {'reserva': reserva})
 
     except Exception as e:
         messages.error(request, f"Ocurrió un error al registrar la reserva: {str(e)}")
         return redirect('index')
-    
+
 
 def pago_fallido(request):
     return render(request, 'core/pago_fallido.html')
