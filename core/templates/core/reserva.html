@@ -177,7 +177,6 @@
 <script id="ocupados_iniciales" type="application/json">
   {{ horarios_ocupados|json_script:"ocupados_iniciales" }}
 </script>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -205,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const equipCantidades = {};
   let promocion = null;
   let horariosBtns = [];
-  let stockEquipamientos = {}; // 🟢 NUEVO: stock disponible actual por equipamiento
+  let stockEquipamientos = {};
 
   const equipamientosDisponibles = [
     {% for equipamiento in equipamientos_disponibles %}
@@ -278,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
           horarioInput.value = btn.dataset.id;
           actualizarTotal();
 
-          // 🟢 NUEVO: cargar stock disponible por equipamiento (fecha + horario)
+          // 🟢 Cargar stock disponible por equipamiento (fecha + horario)
           const fecha = fechaInput.value;
           const horarioId = horarioInput.value;
           fetch(`/api/stock_equipamientos/?fecha=${fecha}&horario_id=${horarioId}`)
@@ -339,7 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         infoClima.style.display = 'flex';
 
-        // ⚠️ Caso: fuera del rango de 5 días
         if (data.advertencia) {
           descElem.textContent = data.advertencia;
           tempElem.textContent = '';
@@ -349,7 +347,6 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // 🟢 Caso: clima válido
         descElem.textContent = data.descripcion;
         tempElem.textContent = data.temperatura.toFixed(1);
         iconElem.src = `https://openweathermap.org/img/wn/${data.icono}@2x.png`;
@@ -407,13 +404,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Agregar equipamiento ----------
   btnAgregar.addEventListener('click', () => {
+    // 🟥 Bloqueo simple: no permite agregar sin horario
+    if (!horarioInput.value) {
+      Swal.fire('Selecciona un horario', 'Debes elegir un bloque horario antes de agregar equipamientos.', 'warning');
+      return;
+    }
+
     const selectedId = selectEquip.value;
     if (!selectedId || document.getElementById(`equip-${selectedId}`)) return;
 
     const equip = equipamientosDisponibles.find(e => e.id === selectedId);
     equipCantidades[selectedId] = 0;
 
-    // 🟢 NUEVO: obtener stock disponible actual desde los datos de la opción
     const stockDisponible = parseInt(selectEquip.options[selectEquip.selectedIndex].dataset.stock_disponible || 0);
 
     const div = document.createElement('div');
@@ -437,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
         const delta = parseInt(btn.dataset.delta);
-        const disponible = stockEquipamientos[id] ?? stockDisponible; // 🟢 usa el stock actual si se cargó
+        const disponible = stockEquipamientos[id] ?? stockDisponible;
         const nuevaCantidad = (equipCantidades[id] || 0) + delta;
         if (nuevaCantidad < 0) return;
         if (nuevaCantidad > disponible) {
@@ -487,6 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
   actualizarTotal();
 });
 </script>
+
 
 
 {% endblock %}
