@@ -21,6 +21,7 @@ urlpatterns = [
     path('detalleReserva/<int:id_reserva>/', views.detalleReserva, name='detalleReserva'),
     path('api/promocion/<str:codigo>/', views.validar_promocion, name='validar_promocion'),
     path('api/horarios_ocupados/', views.api_horarios_ocupados, name='api_horarios_ocupados'),
+    path('api/stock_equipamientos/', views.api_stock_equipamientos, name='api_stock_equipamientos'),
     path('crear_checkout/', views.crear_checkout, name='crear_checkout'),
     path('pago_exitoso/', views.pago_exitoso, name='pago_exitoso'),
     path('pago_fallido/', views.pago_fallido, name='pago_fallido'),

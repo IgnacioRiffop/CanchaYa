@@ -360,6 +360,52 @@ def editar_perfil(request):
     return JsonResponse({'ok': False, 'msg': 'Método inválido.'})
 
 
+# core/views.py
+from django.http import JsonResponse
+from django.db.models import Sum
+
+def api_stock_equipamientos(request):
+    fecha_str = request.GET.get('fecha')
+    horario_id = request.GET.get('horario_id')
+
+    if not fecha_str or not horario_id:
+        return JsonResponse({'error': 'Faltan parámetros (fecha o horario_id).'}, status=400)
+
+    try:
+        fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({'error': 'Formato de fecha inválido (usar YYYY-MM-DD).'}, status=400)
+
+    try:
+        horario_id = int(horario_id)  # 🔹 convierte a entero para que el filtro funcione
+    except ValueError:
+        return JsonResponse({'error': 'ID de horario inválido.'}, status=400)
+
+    equipamientos = Equipamiento.objects.all()
+    data = []
+
+    for eq in equipamientos:
+        reservado = ReservaEquipamiento.objects.filter(
+            reserva__fecha=fecha,
+            reserva__horario_id=horario_id,
+            reserva__estado='A',
+            equipamiento=eq
+        ).aggregate(total_reservado=Sum('cantidad'))['total_reservado'] or 0
+
+        disponible = max(eq.stock - reservado, 0)
+
+        data.append({
+            'id': eq.id_equipamiento,
+            'nombre': eq.nombre,
+            'stock_total': eq.stock,
+            'reservado': reservado,
+            'disponible': disponible,
+            'precio': eq.precio,
+        })
+
+    return JsonResponse({'equipamientos': data})
+
+
 def reserva(request, id_cancha):
     cancha = get_object_or_404(Cancha, pk=id_cancha)
     equipamientos_disponibles = Equipamiento.objects.filter(tipos_cancha=cancha.tipo_cancha)

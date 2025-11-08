@@ -205,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const equipCantidades = {};
   let promocion = null;
   let horariosBtns = [];
+  let stockEquipamientos = {}; // 🟢 NUEVO: stock disponible actual por equipamiento
 
   const equipamientosDisponibles = [
     {% for equipamiento in equipamientos_disponibles %}
@@ -276,6 +277,25 @@ document.addEventListener('DOMContentLoaded', () => {
           btn.classList.add('btn-success', 'activo');
           horarioInput.value = btn.dataset.id;
           actualizarTotal();
+
+          // 🟢 NUEVO: cargar stock disponible por equipamiento (fecha + horario)
+          const fecha = fechaInput.value;
+          const horarioId = horarioInput.value;
+          fetch(`/api/stock_equipamientos/?fecha=${fecha}&horario_id=${horarioId}`)
+            .then(res => res.json())
+            .then(data => {
+              if (!data.equipamientos) return;
+              stockEquipamientos = {}; // reiniciar
+              data.equipamientos.forEach(eq => {
+                stockEquipamientos[eq.id] = eq.disponible;
+                const opt = selectEquip.querySelector(`option[value="${eq.id}"]`);
+                if (opt) {
+                  opt.textContent = `${eq.nombre} - $${eq.precio} (Disponibles: ${eq.disponible})`;
+                  opt.dataset.stock_disponible = eq.disponible;
+                }
+              });
+            })
+            .catch(err => console.error('Error al cargar stock:', err));
         });
       }
 
@@ -393,13 +413,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const equip = equipamientosDisponibles.find(e => e.id === selectedId);
     equipCantidades[selectedId] = 0;
 
+    // 🟢 NUEVO: obtener stock disponible actual desde los datos de la opción
+    const stockDisponible = parseInt(selectEquip.options[selectEquip.selectedIndex].dataset.stock_disponible || 0);
+
     const div = document.createElement('div');
     div.classList.add('d-flex', 'justify-content-between', 'align-items-center', 'mb-3');
     div.id = `equip-${selectedId}`;
     div.innerHTML = `
       <div>
         <strong>${equip.nombre}</strong><br>
-        <small class="text-muted">$${equip.precio} c/u</small>
+        <small class="text-muted">$${equip.precio} c/u</small><br>
+        <small class="text-info">Stock disponible: ${stockDisponible}</small>
       </div>
       <div class="d-flex align-items-center gap-2">
         <button type="button" class="btn btn-outline-success btn-cant" data-id="${equip.id}" data-delta="-1">−</button>
@@ -413,9 +437,15 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
         const delta = parseInt(btn.dataset.delta);
-        equipCantidades[id] = (equipCantidades[id] || 0) + delta;
-        if (equipCantidades[id] < 0) equipCantidades[id] = 0;
-        document.getElementById(`equip-${id}-cant`).textContent = equipCantidades[id];
+        const disponible = stockEquipamientos[id] ?? stockDisponible; // 🟢 usa el stock actual si se cargó
+        const nuevaCantidad = (equipCantidades[id] || 0) + delta;
+        if (nuevaCantidad < 0) return;
+        if (nuevaCantidad > disponible) {
+          Swal.fire('Stock insuficiente', `Solo quedan ${disponible} disponibles.`, 'warning');
+          return;
+        }
+        equipCantidades[id] = nuevaCantidad;
+        document.getElementById(`equip-${id}-cant`).textContent = nuevaCantidad;
         actualizarTotal();
       });
     });
@@ -457,10 +487,6 @@ document.addEventListener('DOMContentLoaded', () => {
   actualizarTotal();
 });
 </script>
-
-
-
-
 
 
 {% endblock %}
