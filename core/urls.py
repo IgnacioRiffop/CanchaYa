@@ -25,6 +25,7 @@ urlpatterns = [
     path('crear_checkout/', views.crear_checkout, name='crear_checkout'),
     path('pago_exitoso/', views.pago_exitoso, name='pago_exitoso'),
     path('pago_fallido/', views.pago_fallido, name='pago_fallido'),
+    path('api/clima/', views.obtener_clima, name='obtener_clima'),
     path('centroGestion/', views.centroGestion, name='centroGestion'),
     path('gestionComercial/', views.gestionComercial, name='gestionComercial'),
     path('gestionCuentas/', views.gestionCuentas, name='gestionCuentas'),

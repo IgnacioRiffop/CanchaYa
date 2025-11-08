@@ -785,6 +785,59 @@ def pago_fallido(request):
     return render(request, 'core/pago_fallido.html')
 
 
+import requests
+
+def obtener_clima(request):
+    lat = request.GET.get('lat')
+    lon = request.GET.get('lon')
+    fecha = request.GET.get('fecha')
+
+    if not lat or not lon:
+        return JsonResponse({'error': 'Faltan coordenadas'}, status=400)
+
+    API_KEY = '798b4f4d195871c9ca50aad795bd6420'
+    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=es"
+
+    try:
+        r = requests.get(url, timeout=5)
+        data = r.json()
+        if 'list' not in data:
+            return JsonResponse({'error': 'Respuesta inválida de OpenWeather'}, status=500)
+
+        fecha_reserva = datetime.strptime(fecha, "%Y-%m-%d").date()
+        # Fecha máxima disponible en el pronóstico (último elemento)
+        ultima_fecha = datetime.fromtimestamp(data['list'][-1]['dt']).date()
+
+        # 🟡 Si la fecha excede el rango de 5 días, devolvemos un mensaje
+        if fecha_reserva > ultima_fecha:
+            return JsonResponse({
+                'advertencia': 'Nuestro pronóstico está disponible solo dentro de los próximos 5 días.'
+            })
+
+        # Buscar el pronóstico más cercano al mediodía del día elegido
+        pronostico = None
+        for entry in data['list']:
+            dt = datetime.fromtimestamp(entry['dt'])
+            if dt.date() == fecha_reserva and dt.hour in [11, 12, 13]:
+                pronostico = entry
+                break
+
+        # Si no se encontró exactamente al mediodía, tomamos el más cercano
+        if not pronostico:
+            pronostico = min(
+                data['list'],
+                key=lambda e: abs(datetime.fromtimestamp(e['dt']).date() - fecha_reserva)
+            )
+
+        clima = {
+            'temperatura': pronostico['main']['temp'],
+            'descripcion': pronostico['weather'][0]['description'].capitalize(),
+            'icono': pronostico['weather'][0]['icon'],
+        }
+        return JsonResponse(clima)
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 def centroGestion(request):
     return render(request, 'core/centroGestion.html')

@@ -68,6 +68,16 @@
               max="{{ fecha_max|date:'Y-m-d' }}"
               value="{{ fecha_seleccionada|date:'Y-m-d' }}">
 
+        <!-- 🔹 Clima del día seleccionado -->
+        <div id="info-clima" class="alert alert-light border d-flex align-items-center justify-content-between p-2" style="display:none;">
+          <div>
+            <strong>Clima estimado:</strong>
+            <span id="clima-descripcion"></span> — 
+            <span id="clima-temp"></span>°C
+          </div>
+          <img id="clima-icono" src="" alt="icono clima" width="50" height="50">
+        </div>
+
         <!-- Contenedor dinámico de horarios -->
         <div class="d-flex flex-wrap" id="horarios-container"></div>
       </div>
@@ -187,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const fechaInput = document.getElementById('fecha');
   const fechaHidden = document.getElementById('fecha-hidden');
 
-  // 👇 Nuevos inputs ocultos para Stripe
+  // 👇 Inputs ocultos usados en Stripe
   const subtotalHidden = document.getElementById('subtotal-hidden');
   const descuentoHidden = document.getElementById('descuento-hidden');
   const totalHidden = document.getElementById('total-hidden');
@@ -231,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
     descuentoElem.textContent = `$${redondear(descuento)}`;
     totalElem.textContent = `$${redondear(total)}`;
 
-    // 👇 Actualizar los valores ocultos para el form
     subtotalHidden.value = redondear(subtotal);
     descuentoHidden.value = redondear(descuento);
     totalHidden.value = redondear(total);
@@ -292,63 +301,41 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => console.error('Error cargando horarios:', err));
   }
 
-  // ---------- Al cambiar la fecha ----------
-  fechaInput.addEventListener('change', () => {
-    const fecha = fechaInput.value;
-    fechaHidden.value = fecha;
-    cargarHorarios(fecha);
-  });
+  // ---------- 🌤️ API del clima ----------
+  function obtenerClima(lat, lon) {
+    const fecha = document.getElementById('fecha').value;
+    fetch(`/api/clima/?lat=${lat}&lon=${lon}&fecha=${fecha}`)
+      .then(res => res.json())
+      .then(data => {
+        const infoClima = document.getElementById('info-clima');
+        const descElem = document.getElementById('clima-descripcion');
+        const tempElem = document.getElementById('clima-temp');
+        const iconElem = document.getElementById('clima-icono');
 
-  // ---------- Inicializar con horarios iniciales ----------
-  try {
-    const horariosIniciales = JSON.parse(document.getElementById('horarios_iniciales').textContent);
-    const horariosOcupadosIniciales = JSON.parse(document.getElementById('ocupados_iniciales').textContent);
-    if (horariosIniciales && horariosIniciales.length > 0) {
-      renderHorarios(horariosIniciales, horariosOcupadosIniciales);
-    } else {
-      cargarHorarios(fechaInput.value);
-    }
-  } catch (err) {
-    console.warn('Error leyendo JSON inicial, se cargan desde API.');
-    cargarHorarios(fechaInput.value);
+        if (data.error) {
+          infoClima.style.display = 'none';
+          return;
+        }
+
+        // ⚠️ Si el servidor devuelve una advertencia (fecha > 5 días)
+        if (data.advertencia) {
+          infoClima.style.display = 'flex';
+          descElem.textContent = data.advertencia;
+          tempElem.textContent = '-';
+          iconElem.src = '';
+          iconElem.alt = 'Sin pronóstico';
+          return;
+        }
+
+        // 🟢 Mostrar clima normal
+        infoClima.style.display = 'flex';
+        descElem.textContent = data.descripcion;
+        tempElem.textContent = data.temperatura.toFixed(1);
+        iconElem.src = `https://openweathermap.org/img/wn/${data.icono}@2x.png`;
+        iconElem.alt = data.descripcion;
+      })
+      .catch(() => document.getElementById('info-clima').style.display = 'none');
   }
-
-  // ---------- Agregar equipamiento ----------
-  btnAgregar.addEventListener('click', () => {
-    const selectedId = selectEquip.value;
-    if (!selectedId || document.getElementById(`equip-${selectedId}`)) return;
-
-    const equip = equipamientosDisponibles.find(e => e.id === selectedId);
-    equipCantidades[selectedId] = 0;
-
-    const div = document.createElement('div');
-    div.classList.add('d-flex', 'justify-content-between', 'align-items-center', 'mb-3');
-    div.id = `equip-${selectedId}`;
-    div.innerHTML = `
-      <div>
-        <strong>${equip.nombre}</strong><br>
-        <small class="text-muted">$${equip.precio} c/u</small>
-      </div>
-      <div class="d-flex align-items-center gap-2">
-        <button type="button" class="btn btn-outline-success btn-cant" data-id="${equip.id}" data-delta="-1">−</button>
-        <span class="fw-bold" id="equip-${equip.id}-cant">0</span>
-        <button type="button" class="btn btn-outline-success btn-cant" data-id="${equip.id}" data-delta="1">+</button>
-      </div>
-    `;
-    contenedorEquip.appendChild(div);
-
-    div.querySelectorAll('.btn-cant').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.id;
-        const delta = parseInt(btn.dataset.delta);
-        equipCantidades[id] = (equipCantidades[id] || 0) + delta;
-        if (equipCantidades[id] < 0) equipCantidades[id] = 0;
-        document.getElementById(`equip-${id}-cant`).textContent = equipCantidades[id];
-        actualizarTotal();
-      });
-    });
-    actualizarTotal();
-  });
 
   // ---------- Aplicar promoción ----------
   btnAplicarPromo.addEventListener('click', () => {
@@ -393,6 +380,75 @@ document.addEventListener('DOMContentLoaded', () => {
         actualizarTotal();
       });
   });
+
+  // ---------- Agregar equipamiento ----------
+  btnAgregar.addEventListener('click', () => {
+    const selectedId = selectEquip.value;
+    if (!selectedId || document.getElementById(`equip-${selectedId}`)) return;
+
+    const equip = equipamientosDisponibles.find(e => e.id === selectedId);
+    equipCantidades[selectedId] = 0;
+
+    const div = document.createElement('div');
+    div.classList.add('d-flex', 'justify-content-between', 'align-items-center', 'mb-3');
+    div.id = `equip-${selectedId}`;
+    div.innerHTML = `
+      <div>
+        <strong>${equip.nombre}</strong><br>
+        <small class="text-muted">$${equip.precio} c/u</small>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-outline-success btn-cant" data-id="${equip.id}" data-delta="-1">−</button>
+        <span class="fw-bold" id="equip-${equip.id}-cant">0</span>
+        <button type="button" class="btn btn-outline-success btn-cant" data-id="${equip.id}" data-delta="1">+</button>
+      </div>
+    `;
+    contenedorEquip.appendChild(div);
+
+    div.querySelectorAll('.btn-cant').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const delta = parseInt(btn.dataset.delta);
+        equipCantidades[id] = (equipCantidades[id] || 0) + delta;
+        if (equipCantidades[id] < 0) equipCantidades[id] = 0;
+        document.getElementById(`equip-${id}-cant`).textContent = equipCantidades[id];
+        actualizarTotal();
+      });
+    });
+    actualizarTotal();
+  });
+
+  // ---------- Inicialización ----------
+  try {
+    const horariosIniciales = JSON.parse(document.getElementById('horarios_iniciales').textContent);
+    const horariosOcupadosIniciales = JSON.parse(document.getElementById('ocupados_iniciales').textContent);
+    if (horariosIniciales && horariosIniciales.length > 0) {
+      renderHorarios(horariosIniciales, horariosOcupadosIniciales);
+    } else {
+      cargarHorarios(fechaInput.value);
+    }
+  } catch (err) {
+    console.warn('Error leyendo JSON inicial, se cargan desde API.');
+    cargarHorarios(fechaInput.value);
+  }
+
+  // 🌍 Obtener ubicación del usuario
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      obtenerClima(lat, lon);
+
+      fechaInput.addEventListener('change', () => {
+        const fecha = fechaInput.value;
+        fechaHidden.value = fecha;
+        cargarHorarios(fecha);
+        obtenerClima(lat, lon);
+      });
+
+    }, () => console.warn('No se pudo acceder a la ubicación.'));
+  }
 
   actualizarTotal();
 });
