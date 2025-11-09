@@ -41,7 +41,7 @@ def contacto(request):
 def promociones(request):
     return render(request, 'core/promociones.html')
 
-def login_view(request):
+def login_view(request): 
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
@@ -59,10 +59,16 @@ def login_view(request):
                 return redirect('index')
 
             messages.success(request, f'¡Bienvenido {user.username}! Has iniciado sesión correctamente.')
-            return redirect('index')
+
+
+            next_url = request.GET.get('next') or request.POST.get('next') or 'index'
+            return redirect(next_url)
         else:
             messages.error(request, 'Correo o contraseña incorrectos.')
             return redirect('index')
+
+    return redirect('index')
+
 
 def logout_view(request):
     logout(request)
