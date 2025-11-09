@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from django.contrib.auth.decorators import login_required
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -11,16 +12,16 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('canchas/', views.canchas, name='canchas'),
-    path('perfil/', views.perfil, name='perfil'),
-    path('editar_perfil/', views.editar_perfil, name='editar_perfil'),
-    path('reserva/<int:id_cancha>/', views.reserva, name='reserva'),
+    path('perfil/', login_required(views.perfil, login_url='login'), name='perfil'),
+    path('editar_perfil/', login_required(views.editar_perfil, login_url='login'), name='editar_perfil'),
+    path('reserva/<int:id_cancha>/', login_required(views.reserva, login_url='login'), name='reserva'),
     path('comprobante/', views.comprobante, name='comprobante'),
-    path('cuenta/', views.cuenta, name='cuenta'),
-    path('modificarCuenta/', views.modificarCuenta, name='modificarCuenta'),
-    path('historialReserva/', views.historialReserva, name='historialReserva'),
-    path('detalleReserva/<int:id_reserva>/', views.detalleReserva, name='detalleReserva'),
+    path('cuenta/', login_required(views.cuenta, login_url='login'), name='cuenta'),
+    path('modificarCuenta/', login_required(views.modificarCuenta, login_url='login'), name='modificarCuenta'),
+    path('historialReserva/', login_required(views.historialReserva, login_url='login'), name='historialReserva'),
+    path('detalleReserva/<int:id_reserva>/', login_required(views.detalleReserva, login_url='login'), name='detalleReserva'),
     path('api/promocion/<str:codigo>/', views.validar_promocion, name='validar_promocion'),
-    path('api/horarios_ocupados/', views.api_horarios_ocupados, name='api_horarios_ocupados'),
+    path('api/horarios_ocupados/', login_required(views.api_horarios_ocupados, login_url='login'), name='api_horarios_ocupados'),
     path('api/stock_equipamientos/', views.api_stock_equipamientos, name='api_stock_equipamientos'),
     path('crear_checkout/', views.crear_checkout, name='crear_checkout'),
     path('pago_exitoso/', views.pago_exitoso, name='pago_exitoso'),
@@ -41,4 +42,5 @@ urlpatterns = [
     path('crudTarifas/', views.crudTarifas, name='crudTarifas'),
     path('crudPromociones/', views.crudPromociones, name='crudPromociones'),
     path('crudHorarios/', views.crudHorarios, name='crudHorarios'),
+    
 ]
