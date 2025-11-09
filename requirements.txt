@@ -6,3 +6,4 @@ pillow
 cx_Oracle
 oracledb
 stripe
+mysqlclient
