@@ -15,6 +15,8 @@ urlpatterns = [
     path('perfil/', login_required(views.perfil, login_url='login'), name='perfil'),
     path('editar_perfil/', login_required(views.editar_perfil, login_url='login'), name='editar_perfil'),
     path('reserva/<int:id_cancha>/', login_required(views.reserva, login_url='login'), name='reserva'),
+    path('reserva/<int:id_reserva>/cancelar/', login_required(views.cancelar_reserva, login_url='login'), name='cancelar_reserva'),
+
     path('comprobante/', views.comprobante, name='comprobante'),
     path('cuenta/', login_required(views.cuenta, login_url='login'), name='cuenta'),
     path('modificarCuenta/', login_required(views.modificarCuenta, login_url='login'), name='modificarCuenta'),
@@ -42,5 +44,5 @@ urlpatterns = [
     path('crudTarifas/', views.crudTarifas, name='crudTarifas'),
     path('crudPromociones/', views.crudPromociones, name='crudPromociones'),
     path('crudHorarios/', views.crudHorarios, name='crudHorarios'),
-    
+
 ]

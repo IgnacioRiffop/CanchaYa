@@ -30,7 +30,11 @@
       <div class="col-md-6">
         <p><strong>Subtotal:</strong> ${{ reserva.subtotal|floatformat:0 }}</p>
         <p><strong>Descuento:</strong> ${{ reserva.descuento|floatformat:0 }}</p>
-        <p><strong>Total Pagado:</strong> <span class="text-success fw-bold">${{ reserva.total|floatformat:0 }}</span></p>
+        <p><strong>Total Pagado:</strong> 
+          <span class="text-success fw-bold">
+            ${{ reserva.total|floatformat:0 }}
+          </span>
+        </p>
       </div>
     </div>
 
@@ -54,12 +58,55 @@
       </div>
     {% endif %}
 
-    <div class="text-center mt-4">
+    <!-- 🎯 Zona de botones -->
+    <div class="text-center mt-4 d-flex justify-content-center gap-3 flex-wrap">
+
       <a href="{% url 'historialReserva' %}" class="btn btn-outline-success px-4">
         ← Volver al historial
       </a>
+
+      {# Solo mostrar "Cancelar reserva" si sigue activa #}
+      {% if reserva.estado == 'A' %}
+        <form method="post"
+              action="{% url 'cancelar_reserva' reserva.id_reserva %}"
+              onsubmit="confirmarCancelacion(event)">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-danger px-4">
+            Cancelar reserva
+          </button>
+        </form>
+      {% else %}
+        <div class="alert alert-warning mb-0">
+          Esta reserva se encuentra <strong>cancelada</strong>.
+        </div>
+      {% endif %}
+
     </div>
   </div>
 
 </div>
+
+{# 🔔 SweetAlert2 #}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  function confirmarCancelacion(event) {
+    event.preventDefault(); // bloquea el submit normal
+    const form = event.target;
+
+    Swal.fire({
+      title: '¿Cancelar reserva?',
+      text: 'Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'No, volver',
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        form.submit(); // ahora sí manda el POST al servidor
+      }
+    });
+  }
+</script>
 {% endblock %}

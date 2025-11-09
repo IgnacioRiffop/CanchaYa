@@ -19,7 +19,7 @@ from datetime import datetime
 import json
 import stripe
 from django.conf import settings
-
+from django.core.mail import send_mail
 
 def contacto(request):
     return render(request, 'core/contacto.html')
@@ -521,6 +521,29 @@ def detalleReserva(request, id_reserva):
 
     return render(request, 'core/detalleReserva.html', {'reserva': reserva})
 
+@login_required(login_url='login')
+def cancelar_reserva(request, id_reserva):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        messages.error(request, "Debes iniciar sesión para cancelar una reserva.")
+        return redirect('login')
+
+    # Solo puede cancelar sus propias reservas
+    reserva = get_object_or_404(
+        Reserva,
+        id_reserva=id_reserva,
+        usuario_id=usuario_id
+    )
+
+    # 👇 Aquí cancelamos directo (sin pantalla intermedia)
+    reserva.estado = 'C'  # Ajusta el valor si usas otro código para cancelada
+    reserva.save()
+
+    # 💌 Enviar correo de cancelación
+    enviar_correo_reserva_cancelada(reserva)
+
+    messages.success(request, "Tu reserva fue cancelada correctamente.")
+    return redirect('historialReserva')
 
 def validar_promocion(request, codigo):
     try:
@@ -978,3 +1001,43 @@ def cancha_delete(request, pk):
         return redirect('crudCanchas')
     # Si llega por GET (p.ej. alguien pega la URL), vuelve a la lista
     return redirect('crudCanchas')
+
+
+
+def enviar_correo_reserva_cancelada(reserva):
+    usuario = reserva.usuario
+    cancha = reserva.cancha
+    horario = reserva.horario
+
+    hora_ini = horario.hora_inicio.strftime('%H:%M')
+    hora_fin = horario.hora_fin.strftime('%H:%M')
+    fecha_str = reserva.fecha.strftime('%d/%m/%Y')
+
+    asunto = "Tu reserva ha sido cancelada - CanchaYa"
+    mensaje = f"""
+Hola {usuario.nombre or 'jugador'},
+
+Tu reserva ha sido CANCELADA ❌
+
+📅 Fecha: {fecha_str}
+🕒 Horario: {hora_ini} - {hora_fin}
+📍 Cancha: {cancha.nombre}
+🏠 Dirección: {cancha.direccion}
+
+Si tú no realizaste esta cancelación, contáctanos cuanto antes.
+
+Atentamente,
+El equipo de CanchaYa 💚
+"""
+
+    try:
+        send_mail(
+            asunto,
+            mensaje,
+            'canchasya.duoc@gmail.com',
+            [usuario.email],
+            fail_silently=False,
+        )
+        print(f"✅ [MAIL] Correo de reserva cancelada enviado a {usuario.email}")
+    except Exception as e:
+        print(f"❌ [MAIL] Error al enviar correo de reserva cancelada: {e}")
