@@ -136,3 +136,19 @@ class ReservaEquipamiento(models.Model):
 
     def __str__(self):
         return f"{self.reserva} - {self.equipamiento}"
+
+
+class Tarifa(models.Model):
+    id_tarifa = models.BigAutoField(primary_key=True)
+    cancha = models.ForeignKey(Cancha, on_delete=models.CASCADE, db_column='cancha_id_cancha')
+    horario = models.ForeignKey(Horario, on_delete=models.CASCADE, db_column='horario_id_horario')
+    precio = models.PositiveIntegerField()
+
+    class Meta:
+        db_table = 'tarifa'
+        unique_together = ('cancha', 'horario')
+        verbose_name = 'Tarifa'
+        verbose_name_plural = 'Tarifas'
+
+    def __str__(self):
+        return f"{self.cancha.nombre} | {self.horario} → ${self.precio}"

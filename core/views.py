@@ -424,34 +424,38 @@ def reserva(request, id_cancha):
     else:
         fecha_seleccionada = hoy
 
-    # 🟩 Obtener horarios dentro del rango de la cancha y convertir a lista serializable
+    # 🟩 Obtener horarios dentro del rango de la cancha
     horarios_qs = Horario.objects.filter(
         hora_inicio__gte=cancha.hora_inicio,
         hora_fin__lte=cancha.hora_fin
     ).order_by('hora_inicio')
 
-    horarios_disponibles = [
-        {
+    # 🟢 Incluir el precio real (según Tarifa o el precio base)
+    horarios_disponibles = []
+    for h in horarios_qs:
+        tarifa = Tarifa.objects.filter(cancha=cancha, horario=h).first()
+        precio_final = tarifa.precio if tarifa else cancha.precio
+
+        horarios_disponibles.append({
             "id_horario": h.id_horario,
             "hora_inicio": h.hora_inicio.strftime("%H:%M"),
-            "hora_fin": h.hora_fin.strftime("%H:%M")
-        }
-        for h in horarios_qs
-    ]
+            "hora_fin": h.hora_fin.strftime("%H:%M"),
+            "precio": precio_final,  # 🔹 precio por horario
+        })
 
     # 🟩 Obtener horarios ocupados para la fecha seleccionada (solo IDs)
     reservas_ocupadas = Reserva.objects.filter(
         cancha=cancha,
         fecha=fecha_seleccionada,
-        estado='A'  # solo reservas activas
+        estado='A'
     ).values_list('horario_id', flat=True)
 
     horarios_ocupados = list(reservas_ocupadas)
 
     context = {
         'cancha': cancha,
-        'horarios_disponibles': horarios_disponibles,  # ✅ lista serializable
-        'horarios_ocupados': horarios_ocupados,        # ✅ lista simple
+        'horarios_disponibles': horarios_disponibles,
+        'horarios_ocupados': horarios_ocupados,
         'fecha_actual': hoy,
         'fecha_max': fecha_max,
         'fecha_seleccionada': fecha_seleccionada,
@@ -459,6 +463,7 @@ def reserva(request, id_cancha):
     }
 
     return render(request, 'core/reserva.html', context)
+
 
 
 def comprobante(request):
@@ -523,8 +528,6 @@ def validar_promocion(request, codigo):
     except Promocion.DoesNotExist:
         return JsonResponse({'error': 'Código de promoción inválido'}, status=404)
     
-
-
 def api_horarios_ocupados(request):
     cancha_id = request.GET.get('cancha_id')
     fecha_str = request.GET.get('fecha')
@@ -533,6 +536,7 @@ def api_horarios_ocupados(request):
     if not cancha_id or not fecha_str:
         return JsonResponse({'error': 'Faltan parámetros (cancha_id o fecha).'}, status=400)
 
+    # 🟩 Validar formato de fecha
     try:
         fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
     except ValueError:
@@ -544,27 +548,31 @@ def api_horarios_ocupados(request):
     except Cancha.DoesNotExist:
         return JsonResponse({'error': 'La cancha no existe.'}, status=404)
 
-    # 🟩 Obtener horarios disponibles dentro del rango de la cancha
+    # 🟩 Obtener horarios dentro del rango de la cancha
     horarios_qs = Horario.objects.filter(
         hora_inicio__gte=cancha.hora_inicio,
         hora_fin__lte=cancha.hora_fin
     ).order_by('hora_inicio')
 
-    horarios_disponibles = [
-        {
+    # 🟩 Construir lista de horarios con precio (tarifa o base)
+    horarios_disponibles = []
+    for h in horarios_qs:
+        tarifa = Tarifa.objects.filter(cancha=cancha, horario=h).first()
+        precio_final = tarifa.precio if tarifa else cancha.precio
+
+        horarios_disponibles.append({
             "id_horario": h.id_horario,
             "hora_inicio": h.hora_inicio.strftime("%H:%M"),
-            "hora_fin": h.hora_fin.strftime("%H:%M")
-        }
-        for h in horarios_qs
-    ]
+            "hora_fin": h.hora_fin.strftime("%H:%M"),
+            "precio": precio_final  # 🔹 nuevo campo agregado
+        })
 
     # 🟩 Obtener horarios ocupados (solo IDs)
     horarios_ocupados = list(
         Reserva.objects.filter(
             cancha=cancha,
             fecha=fecha,
-            estado='A'  # solo reservas activas
+            estado='A'
         ).values_list('horario_id', flat=True)
     )
 
@@ -573,7 +581,7 @@ def api_horarios_ocupados(request):
         'horarios_disponibles': horarios_disponibles,
         'horarios_ocupados': horarios_ocupados
     })
-    
+
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 from decimal import Decimal

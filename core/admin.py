@@ -33,3 +33,13 @@ class EquipamientoAdmin(admin.ModelAdmin):
 
 
 admin.site.register(ReservaEquipamiento)
+
+
+# ---------- TARIFA ----------
+@admin.register(Tarifa)
+class TarifaAdmin(admin.ModelAdmin):
+    list_display = ('id_tarifa', 'cancha', 'horario', 'precio')
+    list_filter = ('cancha',)
+    search_fields = ('cancha__nombre', 'horario__hora_inicio', 'horario__hora_fin')
+    ordering = ('cancha', 'horario')
+    list_per_page = 20

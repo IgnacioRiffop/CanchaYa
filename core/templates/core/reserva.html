@@ -177,10 +177,13 @@
 <script id="ocupados_iniciales" type="application/json">
   {{ horarios_ocupados|json_script:"ocupados_iniciales" }}
 </script>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-  const precioCancha = {{ cancha.precio }};
+  let precioCanchaBase = {{ cancha.precio }};
+  let precioCancha = precioCanchaBase;
+
   const horarioInput = document.getElementById('horario-id');
   const subtotalElem = document.getElementById('subtotal');
   const totalElem = document.getElementById('total');
@@ -262,6 +265,11 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.textContent = `${h.hora_inicio} - ${h.hora_fin}`;
       btn.dataset.id = h.id_horario;
 
+      // 🔹 Guardamos el precio de ese horario (si no viene, usamos base)
+      btn.dataset.precio = (h && typeof h.precio !== 'undefined' && h.precio !== null)
+        ? h.precio
+        : precioCanchaBase;
+
       if (horarios_ocupados.includes(h.id_horario)) {
         btn.className = 'btn btn-secondary m-1';
         btn.disabled = true;
@@ -275,6 +283,17 @@ document.addEventListener('DOMContentLoaded', () => {
           btn.classList.remove('btn-outline-success');
           btn.classList.add('btn-success', 'activo');
           horarioInput.value = btn.dataset.id;
+
+          // 🔸 Actualizamos el precio efectivo según la tarifa del horario
+          const p = parseInt(btn.dataset.precio, 10);
+          precioCancha = Number.isFinite(p) ? p : precioCanchaBase;
+
+          // 🔹 Actualizar el precio mostrado arriba (sin punto)
+          const precioLabel = document.querySelector('.card-body span.fw-bold.text-success');
+          if (precioLabel) {
+            precioLabel.textContent = `$${precioCancha}`; // sin separador de miles
+          }
+
           actualizarTotal();
 
           // 🟢 Cargar stock disponible por equipamiento (fecha + horario)
@@ -302,7 +321,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!btn.disabled) horariosBtns.push(btn);
     });
 
+    // Al re-renderizar, limpiamos selección y volvemos al precio base
     horarioInput.value = '';
+    precioCancha = precioCanchaBase;
     actualizarTotal();
   }
 
@@ -404,7 +425,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Agregar equipamiento ----------
   btnAgregar.addEventListener('click', () => {
-    // 🟥 Bloqueo simple: no permite agregar sin horario
     if (!horarioInput.value) {
       Swal.fire('Selecciona un horario', 'Debes elegir un bloque horario antes de agregar equipamientos.', 'warning');
       return;
