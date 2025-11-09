@@ -215,6 +215,29 @@ document.addEventListener('DOMContentLoaded', () => {
     {% endfor %}
   ];
 
+  // === NUEVO: utilitario para restaurar opciones del select sin el "(Disponibles: X)" ===
+  function resetearOpcionesSelect() {
+    [...selectEquip.options].forEach(opt => {
+      if (!opt.value) return;
+      const base = equipamientosDisponibles.find(e => e.id === opt.value);
+      if (base) {
+        opt.textContent = `${base.nombre} - $${base.precio}`;
+        delete opt.dataset.stock_disponible;
+      }
+    });
+    selectEquip.value = '';
+  }
+
+  // === NUEVO: limpiar equipamientos al cambiar fecha/horario ===
+  function limpiarEquipamientos() {
+    contenedorEquip.innerHTML = '';
+    for (let k in equipCantidades) delete equipCantidades[k]; // mantenemos const, vaciamos claves
+    equipamientosInput.value = '{}';
+    stockEquipamientos = {};
+    resetearOpcionesSelect();
+    actualizarTotal();
+  }
+
   // ---------- Función para actualizar total ----------
   function actualizarTotal() {
     let subtotal = 0;
@@ -276,6 +299,9 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         btn.className = 'btn btn-outline-success m-1 horario-btn';
         btn.addEventListener('click', () => {
+          // === NUEVO: al cambiar de horario, limpiamos equipamientos y estado relacionado ===
+          limpiarEquipamientos();
+
           horariosBtns.forEach(b => {
             b.classList.remove('btn-success', 'activo');
             b.classList.add('btn-outline-success');
@@ -499,6 +525,8 @@ document.addEventListener('DOMContentLoaded', () => {
       fechaInput.addEventListener('change', () => {
         const fecha = fechaInput.value;
         fechaHidden.value = fecha;
+        // === NUEVO: al cambiar de fecha, limpiamos equipamientos antes de recargar horarios ===
+        limpiarEquipamientos();
         cargarHorarios(fecha);
         obtenerClima(lat, lon);
       });
