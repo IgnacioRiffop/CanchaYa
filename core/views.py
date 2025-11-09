@@ -693,6 +693,9 @@ def crear_checkout(request):
 
 from django.db import transaction
 
+from django.db import transaction
+from datetime import datetime, date
+from django.core.mail import send_mail
 
 def pago_exitoso(request):
     reserva_temp = request.session.get('reserva_temp')
@@ -707,12 +710,12 @@ def pago_exitoso(request):
 
     try:
         cancha_id = reserva_temp.get('cancha_id')
-        fecha_str = reserva_temp.get('fecha')  # ⚙️ nombre cambiado solo para convertir correctamente
+        fecha_str = reserva_temp.get('fecha')
         horario_id = reserva_temp.get('horario_id')
         codigo_promocion = reserva_temp.get('codigo_promocion', '').strip()
         equipamientos_json = reserva_temp.get('equipamientos', '{}')
 
-        # ✅ Convertir la fecha a tipo date (si viene como string)
+        # Convertir string a date
         try:
             fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
         except (TypeError, ValueError):
@@ -728,7 +731,7 @@ def pago_exitoso(request):
             messages.error(request, "Este horario se reservó mientras completabas el pago.")
             return redirect('reserva', id_cancha=cancha_id)
 
-        # -------- Recalcular montos con tarifa por horario (seguridad) --------
+        # Recalcular montos con tarifa por horario
         tarifa = Tarifa.objects.filter(cancha=cancha, horario=horario).first()
         precio_base = tarifa.precio if tarifa else cancha.precio
         subtotal = int(precio_base)
@@ -764,6 +767,7 @@ def pago_exitoso(request):
 
         total = subtotal - descuento
 
+        # Crear la reserva
         with transaction.atomic():
             reserva = Reserva.objects.create(
                 fecha=fecha,
@@ -790,9 +794,39 @@ def pago_exitoso(request):
                         cantidad=cantidad_int
                     )
 
+        # Limpiar la sesión temporal
         del request.session['reserva_temp']
 
-        # ✅ Enviar la fecha explícitamente al template (además de la reserva)
+        # Enviar correo de confirmación
+        try:
+            hora_ini = horario.hora_inicio.strftime('%H:%M')
+            hora_fin = horario.hora_fin.strftime('%H:%M')
+            asunto = "Confirmación de reserva - CanchaYa"
+            mensaje = f"""
+Hola {usuario.nombre or 'jugador'},
+
+Tu reserva ha sido confirmada con éxito ⚽
+
+📅 Fecha: {fecha.strftime('%d/%m/%Y')}
+🕒 Horario: {hora_ini} - {hora_fin}
+📍 Cancha: {cancha.nombre}
+🏠 Dirección: {cancha.direccion}
+💰 Total pagado: ${total}
+
+¡Gracias por preferir CanchaYa! Nos vemos en la cancha 💚
+"""
+            send_mail(
+                asunto,
+                mensaje,
+                'canchasya.duoc@gmail.com',  # emisor
+                [usuario.email],             # tu modelo Usuario usa 'email'
+                fail_silently=False,
+            )
+            print(f"✅ [INFO] Correo de confirmación enviado a {usuario.email}")
+        except Exception as e:
+            print(f"❌ [ERROR] No se pudo enviar el correo de confirmación: {e}")
+
+        # Render final
         return render(request, 'core/pago_exitoso.html', {
             'reserva': reserva,
             'fecha': fecha
@@ -801,6 +835,7 @@ def pago_exitoso(request):
     except Exception as e:
         messages.error(request, f"Ocurrió un error al registrar la reserva: {str(e)}")
         return redirect('index')
+
 
 def pago_fallido(request):
     return render(request, 'core/pago_fallido.html')
