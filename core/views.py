@@ -282,13 +282,12 @@ def restablecer_contrasena(request, uidb64, token):
 
 # views.py
 def canchas(request):
-    # 🟩 Mostrar solo canchas activas
     canchas_list = Cancha.objects.filter(estado=True)
-    
-    # Filtros
+
     tipo = request.GET.get('tipo')
     precio = request.GET.get('precio')
     hora = request.GET.get('hora')
+    fecha_str = request.GET.get('fecha')
 
     if tipo:
         canchas_list = canchas_list.filter(tipo_cancha__nombre__icontains=tipo)
@@ -301,27 +300,38 @@ def canchas(request):
             pass
 
     if hora:
-        # Filtra canchas cuya hora_inicio <= hora <= hora_fin
-        from datetime import time
-        h, m = map(int, hora.split(':'))
-        hora_obj = time(h, m)
-        canchas_list = canchas_list.filter(hora_inicio__lte=hora_obj, hora_fin__gte=hora_obj)
+        try:
+            h, m = map(int, hora.split(':'))
+            hora_obj = time(h, m)
+            canchas_list = canchas_list.filter(hora_inicio__lte=hora_obj, hora_fin__gte=hora_obj)
+        except ValueError:
+            pass
 
-    # Paginación
+    if fecha_str:
+        try:
+            fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+            canchas_list = canchas_list.exclude(reserva__fecha=fecha, reserva__estado='A').distinct()
+        except ValueError:
+            pass
+
     paginator = Paginator(canchas_list, 5)
     page_number = request.GET.get('page')
     canchas = paginator.get_page(page_number)
 
-    # Para select de filtros
     tipos = TipoCancha.objects.all()
-    horas = [f"{h:02d}:00" for h in range(8, 24)]  # 08:00 a 23:00
+    horas = [f"{h:02d}:00" for h in range(8, 24)]
+
+    # 🟢 Asegurar formato ISO para HTML5
+    hoy = date.today().strftime("%Y-%m-%d")
+    max_fecha = (date.today() + timedelta(days=30)).strftime("%Y-%m-%d")
 
     return render(request, 'core/canchas.html', {
         'canchas': canchas,
         'tipos': tipos,
         'horas': horas,
+        'hoy': hoy,
+        'max_fecha': max_fecha,
     })
-
 
 
 
