@@ -282,7 +282,8 @@ def restablecer_contrasena(request, uidb64, token):
 
 # views.py
 def canchas(request):
-    canchas_list = Cancha.objects.all()
+    # 🟩 Mostrar solo canchas activas
+    canchas_list = Cancha.objects.filter(estado=True)
     
     # Filtros
     tipo = request.GET.get('tipo')
@@ -320,6 +321,7 @@ def canchas(request):
         'tipos': tipos,
         'horas': horas,
     })
+
 
 
 
