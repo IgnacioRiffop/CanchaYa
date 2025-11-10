@@ -1220,14 +1220,9 @@ def crudReservas(request):
 def crudEquipamientos(request):
     return render(request, 'core/crudEquipamientos.html')
 
-@login_required
+@login_required(login_url='login')
 def crudTarifas(request):
-    """
-    Lista todas las tarifas con cancha + horario + precio.
-    """
-    tarifas = Tarifa.objects.select_related('cancha', 'horario').order_by(
-        'cancha__nombre', 'horario__hora_inicio'
-    )
+    tarifas = Tarifa.objects.select_related('cancha', 'horario').all()
     return render(request, 'core/crudTarifas.html', {'tarifas': tarifas})
 
 
@@ -1288,16 +1283,14 @@ def tarifa_edit(request, pk):
     })
 
 
-@login_required
+@login_required(login_url='login')
 def tarifa_delete(request, pk):
-    """
-    Eliminar una tarifa (confirmación se hace con SweetAlert en el template).
-    """
-    tarifa = get_object_or_404(Tarifa, id_tarifa=pk)
+    """Elimina una tarifa usando SweetAlert y AJAX"""
+    tarifa = get_object_or_404(Tarifa, pk=pk)
     if request.method == 'POST':
         tarifa.delete()
-        messages.success(request, 'Tarifa eliminada correctamente.')
-    return redirect('crudTarifas')
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
 
 
 def crudPromociones(request):
