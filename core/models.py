@@ -22,6 +22,7 @@ class Cancha(models.Model):
     hora_fin = models.TimeField()
     precio = models.PositiveIntegerField(null=True, blank=True)
     tipo_cancha = models.ForeignKey(TipoCancha, on_delete=models.CASCADE, db_column='tipo_cancha_id_tipo_cancha')
+    estado = models.BooleanField(default=True) 
 
     class Meta:
         db_table = 'cancha'

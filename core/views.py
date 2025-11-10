@@ -1715,10 +1715,18 @@ def cancha_edit(request, pk):
 def cancha_delete(request, pk):
     cancha = get_object_or_404(Cancha, id_cancha=pk)
     if request.method == 'POST':
-        cancha.delete()
-        messages.success(request, 'Cancha eliminada correctamente.')
-        return redirect('crudCanchas')
-    # Si llega por GET (p.ej. alguien pega la URL), vuelve a la lista
+        cancha.estado = False
+        cancha.save()
+    # Redirige al CRUD (la vista JS se encarga del SweetAlert)
+    return redirect('crudCanchas')
+
+
+@login_required
+def cancha_activate(request, pk):
+    cancha = get_object_or_404(Cancha, id_cancha=pk)
+    cancha.estado = True
+    cancha.save()
+    # Igual, sin messages ya que SweetAlert se encarga de feedback
     return redirect('crudCanchas')
 
 

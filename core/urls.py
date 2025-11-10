@@ -48,7 +48,8 @@ urlpatterns = [
     path('crudCanchas/', views.crudCanchas, name='crudCanchas'),
     path('canchas/agregar/', views.cancha_create, name='cancha_add'),
     path('canchas/<int:pk>/editar/', views.cancha_edit, name='cancha_edit'),
-    path('canchas/<int:pk>/eliminar/', views.cancha_delete, name='cancha_delete'),
+    path('canchas/eliminar/<int:pk>/', views.cancha_delete, name='cancha_delete'),
+    path('canchas/activar/<int:pk>/', views.cancha_activate, name='cancha_activate'),
 
     path('crudReservas/', views.crudReservas, name='crudReservas'),
     path('crudReservas/agregar/', views.reserva_create, name='reserva_add'),

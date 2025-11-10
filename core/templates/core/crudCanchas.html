@@ -48,15 +48,27 @@
             </div>
           </div>
         </div>
+
         <div class="mt-auto d-flex gap-2 pt-3">
           <a href="{% url 'cancha_edit' c.id_cancha %}" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
 
           <!-- Botón eliminar con SweetAlert -->
-          <a href="{% url 'cancha_delete' c.id_cancha %}"
-             class="btn btn-outline-danger btn-sm flex-fill btn-eliminar"
-             data-nombre="{{ c.nombre }}">
-             Eliminar
-          </a>
+          {% if c.estado %}
+            <form method="POST" style="display:inline;">
+              {% csrf_token %}
+              <button type="button"
+                      class="btn btn-outline-danger btn-sm flex-fill btn-eliminar"
+                      data-url="{% url 'cancha_delete' c.id_cancha %}"
+                      data-nombre="{{ c.nombre }}">
+                  Desactivar
+              </button>
+            </form>
+          {% else %}
+            <a href="{% url 'cancha_activate' c.id_cancha %}"
+               class="btn btn-outline-success btn-sm flex-fill">
+               Reactivar
+            </a>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -67,7 +79,7 @@
   {% endif %}
 </div>
 
-<!-- SweetAlert de confirmación (usa el CDN que ya tienes en base.html) -->
+<!-- SweetAlert de confirmación -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const botones = document.querySelectorAll(".btn-eliminar");
@@ -75,17 +87,17 @@ document.addEventListener("DOMContentLoaded", () => {
   botones.forEach(btn => {
     btn.addEventListener("click", async (e) => {
       e.preventDefault();
-      const url = btn.getAttribute("href");
+      const url = btn.dataset.url;
       const nombre = btn.dataset.nombre;
 
       const res = await Swal.fire({
-        title: "¿Eliminar cancha?",
-        text: `¿Seguro que deseas eliminar "${nombre}"? Esta acción no se puede deshacer.`,
+        title: "¿Desactivar cancha?",
+        text: `¿Seguro que deseas desactivar "${nombre}"?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33",
         cancelButtonColor: "#6c757d",
-        confirmButtonText: "Sí, eliminar",
+        confirmButtonText: "Sí, desactivar",
         cancelButtonText: "Cancelar"
       });
 
@@ -94,15 +106,14 @@ document.addEventListener("DOMContentLoaded", () => {
           method: "POST",
           headers: { "X-CSRFToken": getCookie("csrftoken") },
         }).then(response => {
-          // Si la vista redirige, seguimos la redirección
           if (response.redirected) {
-            window.location.href = response.url;
+            Swal.fire("Hecho", "La cancha se desactivó correctamente.", "success")
+              .then(() => window.location.href = response.url);
           } else {
-            // Si no hay redirect, recargamos la lista
             window.location.reload();
           }
         }).catch(() => {
-          Swal.fire("Error", "No se pudo eliminar. Intenta nuevamente.", "error");
+          Swal.fire("Error", "No se pudo desactivar. Intenta nuevamente.", "error");
         });
       }
     });
