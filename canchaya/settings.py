@@ -104,16 +104,16 @@ DATABASES = {
 
 
 
-#DATABASES = {
-#    'default': {
- #       'ENGINE': 'django.db.backends.oracle',
-  #      'NAME': 'ORCL',        # Tu SID o service name de Oracle
-   #     'USER': 'USUARIO',      # Usuario de Oracle
-    #    'PASSWORD': '12345',   # Contraseña del usuario
-     #   'HOST': 'localhost',   # Dirección del servidor Oracle
-      #  'PORT': '1521',        # Puerto del listener
-    #}
-#}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.oracle',
+        'NAME': 'ORCL',        # Tu SID o service name de Oracle
+        'USER': 'USUARIO',      # Usuario de Oracle
+        'PASSWORD': '12345',   # Contraseña del usuario
+        'HOST': 'localhost',   # Dirección del servidor Oracle
+        'PORT': '1521',        # Puerto del listener
+    }
+}
 
 """
 DATABASES = {

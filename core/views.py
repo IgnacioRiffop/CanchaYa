@@ -1127,6 +1127,13 @@ def exportar_ingresos_pdf(request):
     response.write(pdf)
     return response
 
+def centro_reportes(request):
+    return render(request, 'core/centro_reportes.html')
+
+def reportes_ocupaciones(request):
+    return render(request, 'core/centro_reportes.html')
+
+
 def centroGestion(request):
     return render(request, 'core/centroGestion.html')
 
