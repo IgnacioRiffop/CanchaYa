@@ -6,3 +6,6 @@ pillow
 cx_Oracle
 oracledb
 stripe
+reportlab
+pandas
+openpyxl
