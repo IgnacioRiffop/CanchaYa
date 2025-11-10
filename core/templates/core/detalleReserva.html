@@ -30,7 +30,7 @@
       <div class="col-md-6">
         <p><strong>Subtotal:</strong> ${{ reserva.subtotal|floatformat:0 }}</p>
         <p><strong>Descuento:</strong> ${{ reserva.descuento|floatformat:0 }}</p>
-        <p><strong>Total Pagado:</strong> 
+        <p><strong>Total Pagado:</strong> <span class="text-success fw-bold">${{ reserva.total|floatformat:0 }}</span></p> 
           <span class="text-success fw-bold">
             ${{ reserva.total|floatformat:0 }}
           </span>

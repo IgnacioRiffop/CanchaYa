@@ -10,7 +10,7 @@ from django.db import transaction
 from core.models import Usuario
 from django.http import JsonResponse
 import re
-from .forms import CanchaForm
+from .forms import *
 from .models import *
 from django.core.paginator import Paginator
 from datetime import time
@@ -1366,8 +1366,68 @@ def crudAdministradores(request):
     return render(request, 'core/crudAdministradores.html')
 
 
+@login_required
 def crudUsuarios(request):
-    return render(request, 'core/crudUsuarios.html')
+    usuarios = Usuario.objects.all().order_by('id_usuario')
+    return render(request, 'core/crudUsuarios.html', {'usuarios': usuarios})
+
+@login_required
+def usuario_edit(request, id_usuario):
+    usuario = get_object_or_404(Usuario, id_usuario=id_usuario)
+    old_email = usuario.email  # por si cambia el correo
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        apellido = request.POST.get('apellido', '').strip()
+        email = request.POST.get('email', '').strip()
+
+        if not nombre or not apellido or not email:
+            messages.error(request, 'Todos los campos son obligatorios.')
+            return redirect('usuario_edit', id_usuario=id_usuario)
+
+        with transaction.atomic():
+            # actualizamos en tabla USUARIO (Oracle)
+            usuario.nombre = nombre
+            usuario.apellido = apellido
+            usuario.email = email
+            usuario.save()
+
+            # sincronizar también con auth_user
+            user = User.objects.filter(email=old_email).first()
+            if user:
+                user.first_name = nombre
+                user.last_name = apellido
+                user.email = email
+                user.username = email  # porque tú usas el correo como username
+                user.save()
+
+        messages.success(request, 'Usuario modificado correctamente.')
+        return redirect('crudUsuarios')
+
+    # GET -> mostrar formulario
+    return render(request, 'core/usuario_form.html', {'usuario': usuario})
+
+
+@login_required
+def usuario_delete(request, id_usuario):
+    usuario = get_object_or_404(Usuario, id_usuario=id_usuario)
+    old_email = usuario.email
+
+    if request.method == 'POST':
+        with transaction.atomic():
+            # borrar auth_user si existe
+            user = User.objects.filter(email=old_email).first()
+            if user:
+                user.delete()
+
+            # borrar en tabla USUARIO
+            usuario.delete()
+
+        messages.success(request, 'Usuario eliminado correctamente.')
+        return redirect('crudUsuarios')
+
+    # si alguien entra por GET, lo mandamos de vuelta
+    return redirect('crudUsuarios')
 
 def crudReservas(request):
     return render(request, 'core/crudReservas.html')
@@ -1375,14 +1435,140 @@ def crudReservas(request):
 def crudEquipamientos(request):
     return render(request, 'core/crudEquipamientos.html')
 
+@login_required
 def crudTarifas(request):
-    return render(request, 'core/crudTarifas.html')
+    """
+    Lista todas las tarifas con cancha + horario + precio.
+    """
+    tarifas = Tarifa.objects.select_related('cancha', 'horario').order_by(
+        'cancha__nombre', 'horario__hora_inicio'
+    )
+    return render(request, 'core/crudTarifas.html', {'tarifas': tarifas})
+
+
+@login_required
+def tarifa_create(request):
+    """
+    Crear una nueva tarifa.
+    """
+    if request.method == 'POST':
+        form = TarifaForm(request.POST)
+        if form.is_valid():
+            cancha = form.cleaned_data['cancha']
+            horario = form.cleaned_data['horario']
+
+            # Evitar duplicados (unique_together)
+            if Tarifa.objects.filter(cancha=cancha, horario=horario).exists():
+                messages.error(request, 'Ya existe una tarifa para esa cancha y horario.')
+            else:
+                form.save()
+                messages.success(request, 'Tarifa creada correctamente.')
+                return redirect('crudTarifas')
+    else:
+        form = TarifaForm()
+
+    return render(request, 'core/tarifa_form.html', {
+        'form': form,
+        'modo': 'Agregar',
+    })
+
+
+@login_required
+def tarifa_edit(request, pk):
+    """
+    Editar una tarifa existente.
+    """
+    tarifa = get_object_or_404(Tarifa, id_tarifa=pk)
+
+    if request.method == 'POST':
+        form = TarifaForm(request.POST, instance=tarifa)
+        if form.is_valid():
+            cancha = form.cleaned_data['cancha']
+            horario = form.cleaned_data['horario']
+
+            # Evitar duplicados al editar
+            if Tarifa.objects.filter(cancha=cancha, horario=horario).exclude(id_tarifa=tarifa.id_tarifa).exists():
+                messages.error(request, 'Ya existe una tarifa para esa cancha y horario.')
+            else:
+                form.save()
+                messages.success(request, 'Tarifa actualizada correctamente.')
+                return redirect('crudTarifas')
+    else:
+        form = TarifaForm(instance=tarifa)
+
+    return render(request, 'core/tarifa_form.html', {
+        'form': form,
+        'modo': 'Editar',
+        'tarifa': tarifa,
+    })
+
+
+@login_required
+def tarifa_delete(request, pk):
+    """
+    Eliminar una tarifa (confirmación se hace con SweetAlert en el template).
+    """
+    tarifa = get_object_or_404(Tarifa, id_tarifa=pk)
+    if request.method == 'POST':
+        tarifa.delete()
+        messages.success(request, 'Tarifa eliminada correctamente.')
+    return redirect('crudTarifas')
+
 
 def crudPromociones(request):
     return render(request, 'core/crudPromociones.html')
 
+@login_required
 def crudHorarios(request):
-    return render(request, 'core/crudHorarios.html')
+    horarios = Horario.objects.all().order_by('hora_inicio')
+    return render(request, 'core/crudHorarios.html', {'horarios': horarios})
+
+
+@login_required
+def horario_create(request):
+    if request.method == 'POST':
+        form = HorarioForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Horario creado correctamente.')
+            return redirect('crudHorarios')
+        messages.error(request, 'Revisa los campos del formulario.')
+    else:
+        form = HorarioForm()
+    return render(request, 'core/horarios_form.html', {
+        'form': form,
+        'modo': 'Agregar',
+    })
+
+
+@login_required
+def horario_edit(request, pk):
+    horario = get_object_or_404(Horario, id_horario=pk)
+    if request.method == 'POST':
+        form = HorarioForm(request.POST, instance=horario)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Horario actualizado correctamente.')
+            return redirect('crudHorarios')
+        messages.error(request, 'Revisa los campos del formulario.')
+    else:
+        form = HorarioForm(instance=horario)
+    return render(request, 'core/horarios_form.html', {
+        'form': form,
+        'modo': 'Editar',
+        'horario': horario,
+    })
+
+
+@login_required
+def horario_delete(request, pk):
+    horario = get_object_or_404(Horario, id_horario=pk)
+    if request.method == 'POST':
+        horario.delete()
+        messages.success(request, 'Horario eliminado correctamente.')
+        return redirect('crudHorarios')
+    # si alguien entra por GET, lo mandamos al listado
+    return redirect('crudHorarios')
 
 @login_required
 def crudCanchas(request):

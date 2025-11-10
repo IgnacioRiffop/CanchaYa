@@ -5,55 +5,93 @@
 
 {% block contenido %}
 <div class="container py-5">
+
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-    <div>
-      <h1 class="h3 fw-bold mb-1">Horarios</h1>
-      <p class="text-muted m-0">Bloques disponibles por día.</p>
-    </div>
-    <a href="#" class="btn btn-success fw-semibold">
-      <i class="fa-solid fa-plus me-2"></i> Agregar
+    <h1 class="h3 fw-bold mb-1">Horarios</h1>
+    <a href="{% url 'horario_add' %}" class="btn btn-success fw-semibold">
+      <i class="fa-solid fa-plus me-2"></i> Agregar Horario
     </a>
   </div>
 
-  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Lunes · 16:00–22:00</h5>
-          <small class="text-muted">Bloques de 60 min</small>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
-    </div>
+  {% if horarios %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Hora inicio</th>
+            <th>Hora fin</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in horarios %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ h.hora_inicio }}</td>
+            <td>{{ h.hora_fin }}</td>
+            <td class="text-end">
+              <a href="{% url 'horario_edit' h.id_horario %}" class="btn btn-outline-secondary btn-sm">
+                Modificar
+              </a>
 
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Miércoles · 10:00–18:00</h5>
-          <small class="text-muted">Bloques de 90 min</small>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
+              <form action="{% url 'horario_delete' h.id_horario %}"
+                    method="post"
+                    class="d-inline form-delete-horario">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                  Eliminar
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+  {% else %}
+    <div class="alert alert-secondary text-center mb-0">
+      No hay horarios registrados.
+    </div>
+  {% endif %}
 
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Sábado · 09:00–14:00</h5>
-          <small class="text-muted">Bloques de 60 min</small>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// Confirmación para ELIMINAR con SweetAlert
+document.addEventListener('DOMContentLoaded', function () {
+  const forms = document.querySelectorAll('.form-delete-horario');
+  forms.forEach(form => {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      Swal.fire({
+        title: '¿Eliminar horario?',
+        text: 'Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          form.submit();
+        }
+      });
+    });
+  });
+
+  // Mostrar mensajes de Django como SweetAlert
+  {% if messages %}
+    {% for message in messages %}
+      Swal.fire({
+        icon: '{% if "success" in message.tags %}success{% elif "error" in message.tags %}error{% else %}info{% endif %}',
+        title: '{{ message.tags|capfirst }}',
+        text: '{{ message|escapejs }}',
+      });
+    {% endfor %}
+  {% endif %}
+});
+</script>
 {% endblock %}

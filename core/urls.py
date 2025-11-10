@@ -42,14 +42,26 @@ urlpatterns = [
     path('crudOperadores/', views.crudOperadores, name='crudOperadores'),
     path('crudAdministradores/', views.crudAdministradores, name='crudAdministradores'),
     path('crudUsuarios/', views.crudUsuarios, name='crudUsuarios'),
+    path('usuarios/<int:id_usuario>/editar/', login_required(views.usuario_edit, login_url='login'), name='usuario_edit'),
+    path('usuarios/<int:id_usuario>/eliminar/', login_required(views.usuario_delete, login_url='login'), name='usuario_delete'),
+
     path('crudCanchas/', views.crudCanchas, name='crudCanchas'),
     path('canchas/agregar/', views.cancha_create, name='cancha_add'),
     path('canchas/<int:pk>/editar/', views.cancha_edit, name='cancha_edit'),
     path('canchas/<int:pk>/eliminar/', views.cancha_delete, name='cancha_delete'),
     path('crudReservas/', views.crudReservas, name='crudReservas'),
     path('crudEquipamientos/', views.crudEquipamientos, name='crudEquipamientos'),
+
     path('crudTarifas/', views.crudTarifas, name='crudTarifas'),
+    path('crudTarifas/agregar/', views.tarifa_create, name='tarifa_add'),
+    path('crudTarifas/<int:pk>/editar/', views.tarifa_edit, name='tarifa_edit'),
+    path('crudTarifas/<int:pk>/eliminar/', views.tarifa_delete, name='tarifa_delete'),
+
     path('crudPromociones/', views.crudPromociones, name='crudPromociones'),
+
     path('crudHorarios/', views.crudHorarios, name='crudHorarios'),
+    path('horarios/agregar/', views.horario_create, name='horario_add'),
+    path('horarios/<int:pk>/editar/', views.horario_edit, name='horario_edit'),
+    path('horarios/<int:pk>/eliminar/', views.horario_delete, name='horario_delete'),
 
 ]
