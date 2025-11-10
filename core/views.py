@@ -31,6 +31,17 @@ from reportlab.lib import colors
 from .models import Reserva
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import numbers
+from django.db.models.functions import ExtractWeekDay
+from django.http import HttpResponse
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import numbers
+from django.db.models import Count
+from django.db.models.functions import ExtractWeekDay
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+
 
 
 
@@ -1127,11 +1138,215 @@ def exportar_ingresos_pdf(request):
     response.write(pdf)
     return response
 
+
+def reportes_ocupaciones(request):
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    cancha_id = request.GET.get('cancha')
+
+    reservas = Reserva.objects.filter(estado='A')
+
+    if fecha_inicio and fecha_inicio.lower() != "none":
+        reservas = reservas.filter(fecha__gte=fecha_inicio)
+    if fecha_fin and fecha_fin.lower() != "none":
+        reservas = reservas.filter(fecha__lte=fecha_fin)
+    if cancha_id and cancha_id.lower() != "none" and cancha_id != "":
+        reservas = reservas.filter(cancha_id=cancha_id)
+
+    # 📊 Datos resumen
+    resumen = {
+        'total_reservas': reservas.count(),
+        'canchas_ocupadas': reservas.values('cancha').distinct().count(),
+        'dias_ocupados': reservas.values('fecha').distinct().count(),
+    }
+
+    # 📅 Agrupar reservas por día de la semana (compatibles con Oracle)
+    reservas_por_dia = (
+        reservas.annotate(dia_semana=ExtractWeekDay('fecha'))
+        .values('dia_semana')
+        .annotate(total=Count('id_reserva'))
+        .order_by('dia_semana')
+    )
+
+    # ⏰ Agrupar reservas por hora
+    reservas_por_hora = (
+        reservas.values('horario__hora_inicio')
+        .annotate(total=Count('id_reserva'))
+        .order_by('horario__hora_inicio')
+    )
+
+    # 🗓️ Mapeo de días según Oracle (1=Domingo, 7=Sábado)
+    dias_map = {
+        1: 'Dom',
+        2: 'Lun',
+        3: 'Mar',
+        4: 'Mié',
+        5: 'Jue',
+        6: 'Vie',
+        7: 'Sáb',
+    }
+
+    for d in reservas_por_dia:
+        d['dia_semana'] = dias_map.get(d['dia_semana'], '?')
+
+    context = {
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
+        'cancha_id': cancha_id,
+        'canchas': Cancha.objects.all(),
+        'reservas': reservas,
+        'resumen': resumen,
+        'reservas_por_dia': reservas_por_dia,
+        'reservas_por_hora': reservas_por_hora,
+    }
+
+    return render(request, 'core/reportes_ocupaciones.html', context)
+
 def centro_reportes(request):
     return render(request, 'core/centro_reportes.html')
 
-def reportes_ocupaciones(request):
-    return render(request, 'core/centro_reportes.html')
+def exportar_ocupaciones_excel(request):
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    cancha_id = request.GET.get('cancha')
+
+    reservas = Reserva.objects.filter(estado='A')
+
+    if fecha_inicio and fecha_inicio.lower() != "none":
+        reservas = reservas.filter(fecha__gte=fecha_inicio)
+    if fecha_fin and fecha_fin.lower() != "none":
+        reservas = reservas.filter(fecha__lte=fecha_fin)
+    if cancha_id and cancha_id.lower() != "none" and cancha_id != "":
+        reservas = reservas.filter(cancha_id=cancha_id)
+
+    # 📊 Agrupar datos
+    reservas_por_dia = (
+        reservas.annotate(dia_semana=ExtractWeekDay('fecha'))
+        .values('dia_semana')
+        .annotate(total=Count('id_reserva'))
+        .order_by('dia_semana')
+    )
+
+    reservas_por_hora = (
+        reservas.values('horario__hora_inicio')
+        .annotate(total=Count('id_reserva'))
+        .order_by('horario__hora_inicio')
+    )
+
+    dias_map = {
+        1: 'Dom', 2: 'Lun', 3: 'Mar', 4: 'Mié',
+        5: 'Jue', 6: 'Vie', 7: 'Sáb'
+    }
+    for d in reservas_por_dia:
+        d['dia_semana'] = dias_map.get(d['dia_semana'], '?')
+
+    # 🧾 Detalle reservas
+    data = []
+    for r in reservas:
+        data.append({
+            'Fecha': r.fecha.strftime("%Y-%m-%d") if r.fecha else "",
+            'Cancha': r.cancha.nombre,
+            'Horario': f"{r.horario.hora_inicio} - {r.horario.hora_fin}",
+            'Usuario': f"{r.usuario.nombre} {r.usuario.apellido}",
+        })
+
+    df_detalle = pd.DataFrame(data)
+    df_dias = pd.DataFrame(list(reservas_por_dia))
+    df_horas = pd.DataFrame(list(reservas_por_hora))
+
+    # Excel en memoria
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        # Hoja 1: detalle
+        df_detalle.to_excel(writer, index=False, sheet_name='Reservas')
+
+        # Hoja 2: por día
+        if not df_dias.empty:
+            df_dias.rename(columns={'dia_semana': 'Día', 'total': 'Total Reservas'}, inplace=True)
+            df_dias.to_excel(writer, index=False, sheet_name='Por Día')
+
+        # Hoja 3: por hora
+        if not df_horas.empty:
+            df_horas.rename(columns={'horario__hora_inicio': 'Hora Inicio', 'total': 'Total Reservas'}, inplace=True)
+            df_horas.to_excel(writer, index=False, sheet_name='Por Hora')
+
+        workbook = writer.book
+        for ws_name in workbook.sheetnames:
+            ws = writer.sheets[ws_name]
+            ws.auto_filter.ref = ws.dimensions
+            for col in ws.columns:
+                max_length = 0
+                col_letter = get_column_letter(col[0].column)
+                for cell in col:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+                ws.column_dimensions[col_letter].width = max_length + 2
+
+    output.seek(0)
+    response = HttpResponse(
+        output,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="reporte_ocupaciones.xlsx"'
+    return response
+
+
+def exportar_ocupaciones_pdf(request):
+    from .models import Reserva
+    from django.db.models import Count
+    from django.db.models.functions import ExtractWeekDay
+
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    cancha_id = request.GET.get('cancha')
+
+    reservas = Reserva.objects.filter(estado='A')
+
+    if fecha_inicio and fecha_inicio.lower() != "none":
+        reservas = reservas.filter(fecha__gte=fecha_inicio)
+    if fecha_fin and fecha_fin.lower() != "none":
+        reservas = reservas.filter(fecha__lte=fecha_fin)
+    if cancha_id and cancha_id.lower() != "none" and cancha_id != "":
+        reservas = reservas.filter(cancha_id=cancha_id)
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # Título
+    elements.append(Paragraph("Reporte de Ocupaciones - CanchaYa", styles['Title']))
+    elements.append(Spacer(1, 12))
+
+    # Tabla
+    data = [['Fecha', 'Cancha', 'Horario', 'Usuario']]
+    for r in reservas:
+        data.append([
+            str(r.fecha),
+            r.cancha.nombre,
+            f"{r.horario.hora_inicio} - {r.horario.hora_fin}",
+            f"{r.usuario.nombre} {r.usuario.apellido}",
+        ])
+
+    table = Table(data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#0d6efd")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.whitesmoke, colors.lightgrey]),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="reporte_ocupaciones.pdf"'
+    response.write(pdf)
+    return response
 
 
 def centroGestion(request):
