@@ -68,6 +68,7 @@ urlpatterns = [
     path('crudTarifas/agregar/', views.tarifa_create, name='tarifa_add'),
     path('crudTarifas/<int:pk>/editar/', views.tarifa_edit, name='tarifa_edit'),
     path('crudTarifas/<int:pk>/eliminar/', views.tarifa_delete, name='tarifa_delete'),
+    path('crudTarifas/<int:pk>/activar/', views.tarifa_activate, name='tarifa_activate'),
 
     path('crudPromociones/', views.crudPromociones, name='crudPromociones'),
     path('crudPromociones/agregar/', views.promocion_create, name='promocion_add'),

@@ -1577,12 +1577,21 @@ def tarifa_edit(request, pk):
 
 @login_required(login_url='login')
 def tarifa_delete(request, pk):
-    """Elimina una tarifa usando SweetAlert y AJAX"""
+    """Desactiva una tarifa (eliminación lógica)"""
     tarifa = get_object_or_404(Tarifa, pk=pk)
     if request.method == 'POST':
-        tarifa.delete()
+        tarifa.estado = False
+        tarifa.save()
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
+
+@login_required(login_url='login')
+def tarifa_activate(request, pk):
+    tarifa = get_object_or_404(Tarifa, pk=pk)
+    tarifa.estado = True
+    tarifa.save()
+    return redirect('crudTarifas')
+
 
 
 @login_required(login_url='login')

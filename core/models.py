@@ -144,6 +144,7 @@ class Tarifa(models.Model):
     cancha = models.ForeignKey(Cancha, on_delete=models.CASCADE, db_column='cancha_id_cancha')
     horario = models.ForeignKey(Horario, on_delete=models.CASCADE, db_column='horario_id_horario')
     precio = models.PositiveIntegerField()
+    estado = models.BooleanField(default=True)  # ✅ Activa por defecto
 
     class Meta:
         db_table = 'tarifa'
