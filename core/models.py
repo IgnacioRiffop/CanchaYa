@@ -60,6 +60,7 @@ class Horario(models.Model):
     id_horario = models.BigAutoField(primary_key=True)
     hora_inicio = models.TimeField()
     hora_fin = models.TimeField()
+    estado = models.BooleanField(default=True)  # ✅ activo por defecto
 
     class Meta:
         db_table = 'horario'

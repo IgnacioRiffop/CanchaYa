@@ -30,19 +30,20 @@
             <td>{{ forloop.counter }}</td>
             <td>{{ h.hora_inicio }}</td>
             <td>{{ h.hora_fin }}</td>
-            <td class="text-end">
-              <a href="{% url 'horario_edit' h.id_horario %}" class="btn btn-outline-secondary btn-sm">
-                Modificar
-              </a>
+            <td class="text-end d-flex justify-content-end gap-2">
+              <a href="{% url 'horario_edit' h.id_horario %}" class="btn btn-outline-secondary btn-sm">Modificar</a>
 
-              <form action="{% url 'horario_delete' h.id_horario %}"
-                    method="post"
-                    class="d-inline form-delete-horario">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger btn-sm">
-                  Eliminar
+              {% if h.estado %}
+                <button type="button"
+                        class="btn btn-outline-danger btn-sm btn-eliminar"
+                        data-url="{% url 'horario_delete' h.id_horario %}">
+                  Desactivar
                 </button>
-              </form>
+              {% else %}
+                <a href="{% url 'horario_activate' h.id_horario %}" class="btn btn-outline-success btn-sm">
+                  Reactivar
+                </a>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}
@@ -54,44 +55,61 @@
       No hay horarios registrados.
     </div>
   {% endif %}
-
 </div>
 
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
-// Confirmación para ELIMINAR con SweetAlert
 document.addEventListener('DOMContentLoaded', function () {
-  const forms = document.querySelectorAll('.form-delete-horario');
-  forms.forEach(form => {
-    form.addEventListener('submit', function (e) {
+  const botones = document.querySelectorAll('.btn-eliminar');
+
+  botones.forEach(btn => {
+    btn.addEventListener('click', async (e) => {
       e.preventDefault();
-      Swal.fire({
-        title: '¿Eliminar horario?',
-        text: 'Esta acción no se puede deshacer.',
+      const url = btn.dataset.url;
+
+      const res = await Swal.fire({
+        title: '¿Desactivar horario?',
+        text: 'El horario será desactivado, pero no eliminado.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, desactivar',
         cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          form.submit();
-        }
       });
+
+      if (res.isConfirmed) {
+        fetch(url, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        }).then(response => {
+          if (response.redirected) {
+            Swal.fire('Hecho', 'El horario fue desactivado correctamente.', 'success')
+              .then(() => window.location.href = response.url);
+          }
+        }).catch(() => {
+          Swal.fire('Error', 'No se pudo desactivar el horario.', 'error');
+        });
+      }
     });
   });
 
-  // Mostrar mensajes de Django como SweetAlert
-  {% if messages %}
-    {% for message in messages %}
-      Swal.fire({
-        icon: '{% if "success" in message.tags %}success{% elif "error" in message.tags %}error{% else %}info{% endif %}',
-        title: '{{ message.tags|capfirst }}',
-        text: '{{ message|escapejs }}',
-      });
-    {% endfor %}
-  {% endif %}
+  // Obtener CSRF token
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
 });
 </script>
 {% endblock %}

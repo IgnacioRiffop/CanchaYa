@@ -80,6 +80,7 @@ urlpatterns = [
     path('crudHorarios/', views.crudHorarios, name='crudHorarios'),
     path('horarios/agregar/', views.horario_create, name='horario_add'),
     path('horarios/<int:pk>/editar/', views.horario_edit, name='horario_edit'),
-    path('horarios/<int:pk>/eliminar/', views.horario_delete, name='horario_delete'),
+    path('crudHorarios/<int:pk>/eliminar/', views.horario_delete, name='horario_delete'),
+    path('crudHorarios/<int:pk>/activar/', views.horario_activate, name='horario_activate'),
 
 ]

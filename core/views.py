@@ -1677,14 +1677,21 @@ def horario_edit(request, pk):
     })
 
 
+
 @login_required
 def horario_delete(request, pk):
     horario = get_object_or_404(Horario, id_horario=pk)
     if request.method == 'POST':
-        horario.delete()
-        messages.success(request, 'Horario eliminado correctamente.')
-        return redirect('crudHorarios')
-    # si alguien entra por GET, lo mandamos al listado
+        horario.estado = False
+        horario.save()
+    return redirect('crudHorarios')
+
+
+@login_required
+def horario_activate(request, pk):
+    horario = get_object_or_404(Horario, id_horario=pk)
+    horario.estado = True
+    horario.save()
     return redirect('crudHorarios')
 
 @login_required
