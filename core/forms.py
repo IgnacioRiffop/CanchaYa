@@ -1,5 +1,5 @@
 from django import forms
-from .models import Cancha, Tarifa, Horario, Promocion
+from .models import Cancha, Tarifa, Horario, Promocion, Reserva
 
 class CanchaForm(forms.ModelForm):
     class Meta:
@@ -44,4 +44,30 @@ class PromocionForm(forms.ModelForm):
             'descuento_porcentaje': forms.NumberInput(attrs={'class': 'form-control'}),
             'descuento_fijo': forms.NumberInput(attrs={'class': 'form-control'}),
             'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+class ReservaForm(forms.ModelForm):
+    class Meta:
+        model = Reserva
+        fields = [
+            'fecha',
+            'subtotal',
+            'descuento',
+            'total',
+            'estado',
+            'cancha',
+            'usuario',
+            'promocion',
+            'horario',
+        ]
+        widgets = {
+            'fecha': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'subtotal': forms.NumberInput(attrs={'class': 'form-control'}),
+            'descuento': forms.NumberInput(attrs={'class': 'form-control'}),
+            'total': forms.NumberInput(attrs={'class': 'form-control'}),
+            'estado': forms.Select(attrs={'class': 'form-control'}),
+            'cancha': forms.Select(attrs={'class': 'form-control'}),
+            'usuario': forms.Select(attrs={'class': 'form-control'}),
+            'promocion': forms.Select(attrs={'class': 'form-control'}),
+            'horario': forms.Select(attrs={'class': 'form-control'}),
         }

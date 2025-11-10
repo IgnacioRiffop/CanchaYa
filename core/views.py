@@ -1429,8 +1429,46 @@ def usuario_delete(request, id_usuario):
     # si alguien entra por GET, lo mandamos de vuelta
     return redirect('crudUsuarios')
 
+@login_required(login_url='login')
 def crudReservas(request):
-    return render(request, 'core/crudReservas.html')
+    reservas = Reserva.objects.select_related('cancha', 'usuario', 'horario', 'promocion').all().order_by('-fecha')
+    return render(request, 'core/crudReservas.html', {'reservas': reservas})
+
+
+@login_required(login_url='login')
+def reserva_create(request):
+    if request.method == 'POST':
+        form = ReservaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'errors': form.errors})
+    else:
+        form = ReservaForm()
+    return render(request, 'core/reserva_form.html', {'form': form})
+
+
+@login_required(login_url='login')
+def reserva_edit(request, pk):
+    reserva = get_object_or_404(Reserva, pk=pk)
+    if request.method == 'POST':
+        form = ReservaForm(request.POST, instance=reserva)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'errors': form.errors})
+    else:
+        form = ReservaForm(instance=reserva)
+    return render(request, 'core/reserva_form.html', {'form': form})
+
+
+@login_required(login_url='login')
+def reserva_delete(request, pk):
+    reserva = get_object_or_404(Reserva, pk=pk)
+    if request.method == 'POST':
+        reserva.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
 
 def crudEquipamientos(request):
     return render(request, 'core/crudEquipamientos.html')

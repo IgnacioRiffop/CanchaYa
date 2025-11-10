@@ -1,0 +1,50 @@
+{% extends 'core/base.html' %}
+{% block title %}Agregar / Editar Reserva{% endblock %}
+
+{% block contenido %}
+<div class="container py-5">
+  <h2 class="fw-bold text-success mb-4 text-center">Agregar / Editar Reserva</h2>
+
+  <form id="reservaForm" method="post" class="card shadow-sm p-4 rounded-4">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-success px-5">Guardar</button>
+      <a href="{% url 'crudReservas' %}" class="btn btn-outline-secondary px-5 ms-2">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.querySelector('#reservaForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+
+  fetch(window.location.pathname, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+    },
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      Swal.fire({
+        title: 'Éxito',
+        text: 'La reserva fue guardada correctamente.',
+        icon: 'success',
+        confirmButtonColor: '#198754'
+      }).then(() => {
+        window.location.href = "{% url 'crudReservas' %}";
+      });
+    } else {
+      Swal.fire('Error', 'Revisa los campos del formulario.', 'error');
+      console.log(data.errors);
+    }
+  });
+});
+</script>
+{% endblock %}
