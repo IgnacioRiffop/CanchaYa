@@ -1482,14 +1482,22 @@ def reserva_edit(request, pk):
 
 @login_required(login_url='login')
 def reserva_delete(request, pk):
-    """Cancela una reserva (eliminación lógica)"""
+    """Cancela una reserva (eliminación lógica desde el CRUD, con notificación al usuario)"""
     reserva = get_object_or_404(Reserva, pk=pk)
+    
     if request.method == 'POST':
         reserva.estado = 'C'  # 'C' = Cancelada
         reserva.save()
-        return JsonResponse({'success': True})
-    return JsonResponse({'success': False})
 
+        # 💌 Enviar correo al usuario dueño de la reserva
+        try:
+            enviar_correo_reserva_cancelada(reserva)
+        except Exception as e:
+            print(f"Error al enviar correo de cancelación: {e}")
+
+        return JsonResponse({'success': True})
+    
+    return JsonResponse({'success': False})
 
 @login_required(login_url='login')
 def reserva_activate(request, pk):
