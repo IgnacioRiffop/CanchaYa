@@ -1,5 +1,5 @@
 from django import forms
-from .models import Cancha, Tarifa, Horario, Promocion, Reserva
+from .models import *
 
 class CanchaForm(forms.ModelForm):
     class Meta:
@@ -70,4 +70,20 @@ class ReservaForm(forms.ModelForm):
             'usuario': forms.Select(attrs={'class': 'form-control'}),
             'promocion': forms.Select(attrs={'class': 'form-control'}),
             'horario': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+class EquipamientoForm(forms.ModelForm):
+    tipos_cancha = forms.ModelMultipleChoiceField(
+        queryset=TipoCancha.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = Equipamiento
+        fields = ['nombre', 'stock', 'precio', 'tipos_cancha']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'stock': forms.NumberInput(attrs={'class': 'form-control'}),
+            'precio': forms.NumberInput(attrs={'class': 'form-control'}),
         }

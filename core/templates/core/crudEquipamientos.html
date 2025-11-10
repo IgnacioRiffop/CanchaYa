@@ -1,70 +1,140 @@
 {% extends 'core/base.html' %}
 {% load static %}
 
-{% block title %}Equipamiento | CanchaYa{% endblock %}
+{% block title %}Equipamientos | CanchaYa{% endblock %}
 
 {% block contenido %}
 <div class="container py-5">
 
-  <!-- Header + Agregar -->
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-    <div>
-      <h1 class="h3 fw-bold mb-1">Equipamiento</h1>
-      <p class="text-muted m-0">Listado de equipamiento (visual, con acciones rápidas).</p>
-    </div>
-    <a href="#" class="btn btn-success fw-semibold">
+    <h1 class="h3 fw-bold mb-1">Equipamientos</h1>
+    <a href="{% url 'equipamiento_add' %}" class="btn btn-success fw-semibold">
       <i class="fa-solid fa-plus me-2"></i> Agregar
     </a>
   </div>
 
-  <!-- Grid de tarjetas -->
-  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
-
-    <!-- Item demo 1 -->
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Balones N°5</h5>
-          <small class="text-muted d-block">Tipo: Fútbol</small>
-          <small class="text-muted">Stock: 12 · Estado: Bueno</small>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
+  {% if equipamientos %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-success">
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Stock</th>
+            <th>Precio</th>
+            <th>Tipos de cancha</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for e in equipamientos %}
+          <tr>
+            <td>{{ e.id_equipamiento }}</td>
+            <td>{{ e.nombre }}</td>
+            <td>{{ e.stock }}</td>
+            <td>
+              {% if e.precio %}
+                ${{ e.precio|floatformat:0 }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if e.tipos_cancha.all %}
+                {% for tc in e.tipos_cancha.all %}
+                  <span class="badge bg-secondary me-1 mb-1">{{ tc.nombre }}</span>
+                {% empty %}
+                  <span class="text-muted">Sin tipos asociados</span>
+                {% endfor %}
+              {% else %}
+                <span class="text-muted">Sin tipos asociados</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <div class="d-flex justify-content-center gap-2">
+                <a href="{% url 'equipamiento_edit' e.id_equipamiento %}"
+                   class="btn btn-outline-secondary btn-sm">
+                  Modificar
+                </a>
+                <button class="btn btn-outline-danger btn-sm btn-eliminar-equipamiento"
+                        data-url="{% url 'equipamiento_delete' e.id_equipamiento %}">
+                  Eliminar
+                </button>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
     </div>
-
-    <!-- Item demo 2 -->
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Petos Verdes</h5>
-          <small class="text-muted d-block">Talla: Única</small>
-          <small class="text-muted">Stock: 20 · Estado: Muy bueno</small>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
+  {% else %}
+    <div class="alert alert-secondary text-center mt-4">
+      No hay equipamientos registrados.
     </div>
-
-    <!-- Item demo 3 -->
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Conos de Entrenamiento</h5>
-          <small class="text-muted d-block">Set de 30</small>
-          <small class="text-muted">Stock: 5 · Estado: Bueno</small>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
-    </div>
-
-  </div>
+  {% endif %}
 </div>
+
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const botonesEliminar = document.querySelectorAll('.btn-eliminar-equipamiento');
+
+  botonesEliminar.forEach(boton => {
+    boton.addEventListener('click', function (e) {
+      e.preventDefault();
+      const url = this.getAttribute('data-url');
+
+      Swal.fire({
+        title: '¿Eliminar equipamiento?',
+        text: 'Esta acción eliminará el equipamiento definitivamente.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(url, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken'),
+            },
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire({
+                title: 'Eliminado',
+                text: 'El equipamiento fue eliminado correctamente.',
+                icon: 'success',
+                confirmButtonColor: '#198754'
+              }).then(() => location.reload());
+            } else {
+              Swal.fire('Error', 'No se pudo eliminar el equipamiento.', 'error');
+            }
+          });
+        }
+      });
+    });
+  });
+
+  // Helper CSRF
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+});
+</script>
 {% endblock %}

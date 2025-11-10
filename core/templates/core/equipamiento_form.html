@@ -1,0 +1,70 @@
+{% extends 'core/base.html' %}
+{% block title %}Agregar / Editar Equipamiento{% endblock %}
+
+{% block contenido %}
+<div class="container py-5">
+  <h2 class="fw-bold text-success mb-4 text-center">Agregar / Editar Equipamiento</h2>
+
+  <form id="equipamientoForm" method="post" class="card shadow-sm p-4 rounded-4">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label class="form-label">Nombre</label>
+      {{ form.nombre }}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Stock</label>
+      {{ form.stock }}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Precio</label>
+      {{ form.precio }}
+      <div class="form-text">Puedes dejarlo vacío si no aplica.</div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Tipos de cancha asociados</label>
+      {{ form.tipos_cancha }}
+    </div>
+
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-success px-5">Guardar</button>
+      <a href="{% url 'crudEquipamientos' %}" class="btn btn-outline-secondary px-5 ms-2">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.querySelector('#equipamientoForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+
+  fetch(window.location.pathname, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+    },
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      Swal.fire({
+        title: 'Éxito',
+        text: 'El equipamiento fue guardado correctamente.',
+        icon: 'success',
+        confirmButtonColor: '#198754'
+      }).then(() => {
+        window.location.href = "{% url 'crudEquipamientos' %}";
+      });
+    } else {
+      Swal.fire('Error', 'Revisa los campos del formulario.', 'error');
+      console.log(data.errors);
+    }
+  });
+});
+</script>
+{% endblock %}

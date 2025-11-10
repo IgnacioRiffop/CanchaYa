@@ -1470,8 +1470,47 @@ def reserva_delete(request, pk):
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
 
+@login_required(login_url='login')
 def crudEquipamientos(request):
-    return render(request, 'core/crudEquipamientos.html')
+    equipamientos = Equipamiento.objects.prefetch_related('tipos_cancha').all().order_by('nombre')
+    return render(request, 'core/crudEquipamientos.html', {'equipamientos': equipamientos})
+
+
+@login_required(login_url='login')
+def equipamiento_create(request):
+    if request.method == 'POST':
+        form = EquipamientoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'errors': form.errors})
+    else:
+        form = EquipamientoForm()
+    return render(request, 'core/equipamiento_form.html', {'form': form})
+
+
+@login_required(login_url='login')
+def equipamiento_edit(request, pk):
+    equipamiento = get_object_or_404(Equipamiento, pk=pk)
+    if request.method == 'POST':
+        form = EquipamientoForm(request.POST, instance=equipamiento)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'errors': form.errors})
+    else:
+        form = EquipamientoForm(instance=equipamiento)
+    return render(request, 'core/equipamiento_form.html', {'form': form})
+
+
+@login_required(login_url='login')
+def equipamiento_delete(request, pk):
+    equipamiento = get_object_or_404(Equipamiento, pk=pk)
+    if request.method == 'POST':
+        equipamiento.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
+
 
 @login_required(login_url='login')
 def crudTarifas(request):
