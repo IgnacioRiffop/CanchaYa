@@ -23,7 +23,6 @@
             <th>Usuario</th>
             <th>Cancha</th>
             <th>Horario</th>
-            <th>Estado</th>
             <th>Total</th>
             <th class="text-center">Acciones</th>
           </tr>
@@ -36,23 +35,24 @@
             <td>{{ reserva.usuario.nombre }} {{ reserva.usuario.apellido }}</td>
             <td>{{ reserva.cancha.nombre }}</td>
             <td>{{ reserva.horario.hora_inicio }} - {{ reserva.horario.hora_fin }}</td>
-            <td>
-              {% if reserva.estado == 'A' %}
-                <span class="badge bg-success">Activa</span>
-              {% else %}
-                <span class="badge bg-danger">Cancelada</span>
-              {% endif %}
-            </td>
             <td>${{ reserva.total|floatformat:0 }}</td>
             <td class="text-center">
               <div class="d-flex justify-content-center gap-2">
                 <a href="{% url 'reserva_edit' reserva.id_reserva %}" class="btn btn-outline-secondary btn-sm">
                   Modificar
                 </a>
-                <button class="btn btn-outline-danger btn-sm eliminar-reserva"
-                        data-id="{{ reserva.id_reserva }}">
-                  Eliminar
-                </button>
+
+                {% if reserva.estado == 'A' %}
+                  <button class="btn btn-outline-danger btn-sm eliminar-reserva"
+                          data-id="{{ reserva.id_reserva }}">
+                    Cancelar
+                  </button>
+                {% else %}
+                  <a href="{% url 'reserva_activate' reserva.id_reserva %}" 
+                     class="btn btn-outline-success btn-sm">
+                    Reactivar
+                  </a>
+                {% endif %}
               </div>
             </td>
           </tr>
@@ -79,33 +79,31 @@ document.addEventListener('DOMContentLoaded', function () {
       const reservaId = this.getAttribute('data-id');
 
       Swal.fire({
-        title: '¿Eliminar reserva?',
-        text: 'Esta acción eliminará la reserva definitivamente.',
+        title: '¿Cancelar reserva?',
+        text: 'La reserva será marcada como cancelada, pero no eliminada.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#198754',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'Volver'
       }).then((result) => {
         if (result.isConfirmed) {
           fetch(`/crudReservas/${reservaId}/eliminar/`, {
             method: 'POST',
-            headers: {
-              'X-CSRFToken': getCookie('csrftoken'),
-            },
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
           })
           .then(response => response.json())
           .then(data => {
             if (data.success) {
               Swal.fire({
-                title: 'Eliminada',
-                text: 'La reserva fue eliminada correctamente.',
+                title: 'Cancelada',
+                text: 'La reserva fue cancelada correctamente.',
                 icon: 'success',
                 confirmButtonColor: '#198754'
               }).then(() => location.reload());
             } else {
-              Swal.fire('Error', 'No se pudo eliminar la reserva.', 'error');
+              Swal.fire('Error', 'No se pudo cancelar la reserva.', 'error');
             }
           });
         }
@@ -118,9 +116,9 @@ document.addEventListener('DOMContentLoaded', function () {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
       const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
           cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
           break;
         }

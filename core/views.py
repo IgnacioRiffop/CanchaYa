@@ -1462,13 +1462,25 @@ def reserva_edit(request, pk):
     return render(request, 'core/reserva_form.html', {'form': form})
 
 
+
 @login_required(login_url='login')
 def reserva_delete(request, pk):
+    """Cancela una reserva (eliminación lógica)"""
     reserva = get_object_or_404(Reserva, pk=pk)
     if request.method == 'POST':
-        reserva.delete()
+        reserva.estado = 'C'  # 'C' = Cancelada
+        reserva.save()
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
+
+
+@login_required(login_url='login')
+def reserva_activate(request, pk):
+    """Reactivar una reserva cancelada"""
+    reserva = get_object_or_404(Reserva, pk=pk)
+    reserva.estado = 'A'  # 'A' = Activa
+    reserva.save()
+    return redirect('crudReservas')
 
 @login_required(login_url='login')
 def crudEquipamientos(request):

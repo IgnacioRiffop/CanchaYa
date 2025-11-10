@@ -55,6 +55,7 @@ urlpatterns = [
     path('crudReservas/agregar/', views.reserva_create, name='reserva_add'),
     path('crudReservas/<int:pk>/editar/', views.reserva_edit, name='reserva_edit'),
     path('crudReservas/<int:pk>/eliminar/', views.reserva_delete, name='reserva_delete'),
+    path('crudReservas/<int:pk>/activar/', views.reserva_activate, name='reserva_activate'),
 
 
     path('crudEquipamientos/', views.crudEquipamientos, name='crudEquipamientos'),
