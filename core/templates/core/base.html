@@ -39,10 +39,11 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'canchas' %}">Canchas</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'promociones' %}">Promociones</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'contacto' %}">Contacto</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'centroGestion' %}">Centro de Gestión</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'centro_reportes' %}">Reportes</a></li>
+
 
           {% if user.is_authenticated %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'centroGestion' %}">Centro de Gestión</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'centro_reportes' %}">Reportes</a></li>
             <!-- MENÚ DE USUARIO LOGUEADO -->
             <li class="nav-item dropdown ms-3">
               <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

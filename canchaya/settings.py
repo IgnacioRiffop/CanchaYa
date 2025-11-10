@@ -93,26 +93,22 @@ DATABASES = {
     #}
 #}
 
+
+import oracledb
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.oracle',
-        'NAME': 'localhost:1521/ORCLPDB',  # tu PDB real
-        'USER': 'CANCHAYA',
-        'PASSWORD': 'NuevaClave123',
+        'NAME': '(DESCRIPTION='
+                '(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))'
+                '(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=ORCLPDB)))',
+        'USER': 'USUARIO',
+        'PASSWORD': '12345',
     }
 }
 
 
 
-#DATABASES = {
- #      'ENGINE': 'django.db.backends.oracle',
-  #      'NAME': 'ORCL',        # Tu SID o service name de Oracle
-   #     'USER': 'USUARIO',      # Usuario de Oracle
-    #    'PASSWORD': '12345',   # Contraseña del usuario
-     #   'HOST': 'localhost',   # Dirección del servidor Oracle
-      #  'PORT': '1521',        # Puerto del listener
-    #}
-#}
+
 
 """
 DATABASES = {
