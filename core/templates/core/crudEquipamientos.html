@@ -56,10 +56,18 @@
                    class="btn btn-outline-secondary btn-sm">
                   Modificar
                 </a>
-                <button class="btn btn-outline-danger btn-sm btn-eliminar-equipamiento"
-                        data-url="{% url 'equipamiento_delete' e.id_equipamiento %}">
-                  Eliminar
-                </button>
+
+                {% if e.estado %}
+                  <button class="btn btn-outline-danger btn-sm btn-eliminar-equipamiento"
+                          data-url="{% url 'equipamiento_delete' e.id_equipamiento %}">
+                    Desactivar
+                  </button>
+                {% else %}
+                  <a href="{% url 'equipamiento_activate' e.id_equipamiento %}"
+                     class="btn btn-outline-success btn-sm">
+                    Reactivar
+                  </a>
+                {% endif %}
               </div>
             </td>
           </tr>
@@ -86,13 +94,13 @@ document.addEventListener('DOMContentLoaded', function () {
       const url = this.getAttribute('data-url');
 
       Swal.fire({
-        title: '¿Eliminar equipamiento?',
-        text: 'Esta acción eliminará el equipamiento definitivamente.',
+        title: '¿Desactivar equipamiento?',
+        text: 'El equipamiento será desactivado, pero no eliminado permanentemente.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#198754',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, eliminar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, desactivar',
         cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
@@ -106,13 +114,13 @@ document.addEventListener('DOMContentLoaded', function () {
           .then(data => {
             if (data.success) {
               Swal.fire({
-                title: 'Eliminado',
-                text: 'El equipamiento fue eliminado correctamente.',
+                title: 'Desactivado',
+                text: 'El equipamiento fue desactivado correctamente.',
                 icon: 'success',
                 confirmButtonColor: '#198754'
               }).then(() => location.reload());
             } else {
-              Swal.fire('Error', 'No se pudo eliminar el equipamiento.', 'error');
+              Swal.fire('Error', 'No se pudo desactivar el equipamiento.', 'error');
             }
           });
         }

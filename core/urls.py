@@ -61,6 +61,8 @@ urlpatterns = [
     path('crudEquipamientos/agregar/', views.equipamiento_create, name='equipamiento_add'),
     path('crudEquipamientos/<int:pk>/editar/', views.equipamiento_edit, name='equipamiento_edit'),
     path('crudEquipamientos/<int:pk>/eliminar/', views.equipamiento_delete, name='equipamiento_delete'),
+    path('crudEquipamientos/<int:pk>/activar/', views.equipamiento_activate, name='equipamiento_activate'),
+
 
 
 

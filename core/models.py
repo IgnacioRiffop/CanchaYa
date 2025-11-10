@@ -38,13 +38,13 @@ class Equipamiento(models.Model):
     nombre = models.CharField(max_length=150)
     stock = models.PositiveIntegerField()
     precio = models.PositiveIntegerField(null=True, blank=True)
+    estado = models.BooleanField(default=True)  # ✅ Activo por defecto
 
-    # Relación ManyToMany con TipoCancha
     tipos_cancha = models.ManyToManyField(
         'TipoCancha',
         related_name='equipamientos',
         blank=True,
-        db_table='equipamiento_tipo_cancha'  # tabla intermedia personalizada
+        db_table='equipamiento_tipo_cancha'
     )
 
     class Meta:
@@ -54,6 +54,7 @@ class Equipamiento(models.Model):
 
     def __str__(self):
         return self.nombre
+
 
 
 class Horario(models.Model):

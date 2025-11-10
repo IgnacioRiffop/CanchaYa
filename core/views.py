@@ -1505,11 +1505,22 @@ def equipamiento_edit(request, pk):
 
 @login_required(login_url='login')
 def equipamiento_delete(request, pk):
+    """Desactiva un equipamiento (eliminación lógica)"""
     equipamiento = get_object_or_404(Equipamiento, pk=pk)
     if request.method == 'POST':
-        equipamiento.delete()
+        equipamiento.estado = False
+        equipamiento.save()
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
+
+
+@login_required(login_url='login')
+def equipamiento_activate(request, pk):
+    """Reactivar un equipamiento desactivado"""
+    equipamiento = get_object_or_404(Equipamiento, pk=pk)
+    equipamiento.estado = True
+    equipamiento.save()
+    return redirect('crudEquipamientos')
 
 
 @login_required(login_url='login')
