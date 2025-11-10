@@ -9,35 +9,43 @@
   <div class="court-list container">
     {% if reservas %}
       {% for reserva in reservas %}
-      <div class="court-card d-flex align-items-center p-3 mb-4 shadow-sm rounded-4 bg-white hover-card">
-        <img src="{{ reserva.cancha.imagen.url }}" 
-             alt="{{ reserva.cancha.nombre }}" 
-             class="court-img rounded-3 me-3">
+      <!-- 🟩 Tarjeta de reserva -->
+      <div class="court-card d-flex align-items-center p-3 mb-4 shadow-sm rounded-4 hover-card 
+                  {% if reserva.estado == 'C' %}bg-light text-muted border border-2 border-danger{% else %}bg-white{% endif %}">
+
+        {% if reserva.cancha.imagen %}
+          <img src="{{ reserva.cancha.imagen.url }}" 
+               alt="{{ reserva.cancha.nombre }}" 
+               class="court-img rounded-3 me-3">
+        {% else %}
+          <div class="rounded-3 me-3 d-flex align-items-center justify-content-center bg-secondary-subtle"
+               style="width:120px;height:90px;">
+            <i class="fa-solid fa-image text-secondary"></i>
+          </div>
+        {% endif %}
 
         <div class="flex-grow-1">
-          <h5 class="fw-bold mb-1">{{ reserva.cancha.nombre }}</h5>
+          <h5 class="fw-bold mb-1 {% if reserva.estado == 'C' %}text-secondary {% endif %}">
+            {{ reserva.cancha.nombre }}
+          </h5>
           <p class="text-muted mb-1 small">{{ reserva.cancha.direccion }}</p>
           <p class="text-secondary small">{{ reserva.cancha.tipo_cancha.nombre }}</p>
           <p class="mb-1"><strong>Fecha:</strong> {{ reserva.fecha|date:"d/m/Y" }}</p>
           <p class="mb-1"><strong>Horario:</strong> {{ reserva.horario.hora_inicio }} - {{ reserva.horario.hora_fin }}</p>
 
-          <!-- 👇 Estado entre paréntesis -->
-          <p class="mb-1">
-            <strong>Estado:</strong>
-            {% if reserva.estado == 'A' %}
-              <span class="text-success fw-bold">(Activa)</span>
-            {% elif reserva.estado == 'C' %}
-              <span class="text-danger fw-bold">(Cancelada)</span>
-            {% else %}
-              <span class="text-secondary fw-bold">({{ reserva.estado }})</span>
-            {% endif %}
-          </p>
+          {% if reserva.estado == 'C' %}
+            <span class="badge bg-danger-subtle text-danger mt-1">Cancelada</span>
+          {% endif %}
 
-          <p class="fw-bold text-success mt-2">Total: ${{ reserva.total|floatformat:0 }}</p>
+          <p class="fw-bold text-success mt-2 {% if reserva.estado == 'C' %}text-secondary{% endif %}">
+            Total: ${{ reserva.total|floatformat:0 }}
+          </p>
         </div>
 
         <a href="{% url 'detalleReserva' reserva.id_reserva %}" 
-           class="btn btn-outline-success rounded-pill px-4 py-2">Ver Detalle</a>
+           class="btn {% if reserva.estado == 'C' %}btn-outline-secondary{% else %}btn-outline-success{% endif %} rounded-pill px-4 py-2">
+           Ver Detalle
+        </a>
       </div>
       {% endfor %}
     {% else %}
