@@ -19,7 +19,21 @@ from datetime import datetime
 import json
 import stripe
 from django.conf import settings
-from django.core.mail import send_mail
+from django.db.models import Sum, Count
+from django.http import JsonResponse
+import io
+import pandas as pd
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from .models import Reserva
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import numbers
+
+
+
 
 def contacto(request):
     return render(request, 'core/contacto.html')
@@ -366,9 +380,6 @@ def editar_perfil(request):
     return JsonResponse({'ok': False, 'msg': 'Método inválido.'})
 
 
-# core/views.py
-from django.http import JsonResponse
-from django.db.models import Sum
 
 def api_stock_equipamientos(request):
     fecha_str = request.GET.get('fecha')
@@ -923,6 +934,205 @@ def obtener_clima(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+def reportes_ingresos(request):
+    # Parámetros de filtro (GET)
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    cancha_id = request.GET.get('cancha')
+
+    # Query base: solo reservas activas
+    reservas = Reserva.objects.filter(estado='A')
+
+    if fecha_inicio:
+        reservas = reservas.filter(fecha__gte=fecha_inicio)
+    if fecha_fin:
+        reservas = reservas.filter(fecha__lte=fecha_fin)
+    if cancha_id and cancha_id != '':
+        reservas = reservas.filter(cancha_id=cancha_id)
+
+    # Agregados
+    resumen = reservas.aggregate(
+        total_ingresos=Sum('total'),
+        total_descuentos=Sum('descuento'),
+        total_subtotal=Sum('subtotal'),
+        cantidad_reservas=Count('id_reserva')
+    )
+
+    # Reporte por cancha
+    ingresos_por_cancha = reservas.values('cancha__nombre').annotate(
+        ingresos=Sum('total'),
+        reservas=Count('id_reserva')
+    ).order_by('-ingresos')
+
+    context = {
+        'reservas': reservas,
+        'resumen': resumen,
+        'ingresos_por_cancha': ingresos_por_cancha,
+        'canchas': Cancha.objects.all(),
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
+        'cancha_id': cancha_id,
+    }
+    return render(request, 'core/reportes_ingresos.html', context)
+
+
+# 🟢 EXPORTAR A EXCEL
+def exportar_ingresos_excel(request):
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    cancha_id = request.GET.get('cancha')
+
+    reservas = Reserva.objects.filter(estado='A')
+
+    # ✅ Validaciones seguras
+    if fecha_inicio and fecha_inicio.lower() != "none":
+        reservas = reservas.filter(fecha__gte=fecha_inicio)
+    if fecha_fin and fecha_fin.lower() != "none":
+        reservas = reservas.filter(fecha__lte=fecha_fin)
+    if cancha_id and cancha_id.lower() != "none" and cancha_id != "":
+        reservas = reservas.filter(cancha_id=cancha_id)
+
+    # 🧾 Construcción de datos
+    data = []
+    for r in reservas:
+        fecha_str = r.fecha.strftime("%Y-%m-%d") if r.fecha else None
+        data.append({
+            'Fecha': fecha_str,
+            'Cancha': r.cancha.nombre,
+            'Usuario': f"{r.usuario.nombre} {r.usuario.apellido}",
+            'Subtotal': r.subtotal,
+            'Descuento': r.descuento,
+            'Total': r.total,
+        })
+
+    df = pd.DataFrame(data)
+
+    # Convertir la fecha en datetime real
+    if not df.empty:
+        df['Fecha'] = pd.to_datetime(df['Fecha'], errors='coerce')
+
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Reservas')
+
+        # 📊 Hoja resumen
+        if not df.empty:
+            resumen = df.groupby('Cancha').agg({
+                'Subtotal': 'sum',
+                'Descuento': 'sum',
+                'Total': 'sum'
+            }).reset_index()
+            resumen.to_excel(writer, index=False, sheet_name='Resumen')
+
+        # 🎨 Ajustes de formato visual
+        workbook = writer.book
+        ws = writer.sheets['Reservas']
+
+        # ✅ Auto-filtro
+        ws.auto_filter.ref = ws.dimensions
+
+        # ✅ Ajustar ancho de columnas automáticamente
+        for col in ws.columns:
+            max_length = 0
+            col_letter = get_column_letter(col[0].column)
+            for cell in col:
+                if cell.value:
+                    cell_length = len(str(cell.value))
+                    if cell_length > max_length:
+                        max_length = cell_length
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[col_letter].width = adjusted_width
+
+        # ✅ Formato de fechas (columna “Fecha”)
+        for cell in ws['A']:
+            if cell.row == 1:
+                continue
+            cell.number_format = 'YYYY-MM-DD'
+
+        # ✅ Formato de números con separador de miles
+        for col_idx, col_name in enumerate(df.columns, 1):
+            if col_name in ['Subtotal', 'Descuento', 'Total']:
+                col_letter = get_column_letter(col_idx)
+                for cell in ws[col_letter]:
+                    if cell.row == 1:
+                        continue
+                    cell.number_format = '#,##0'
+
+    output.seek(0)
+    response = HttpResponse(
+        output,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="reporte_ingresos.xlsx"'
+    return response
+
+
+# 🟥 EXPORTAR A PDF
+def exportar_ingresos_pdf(request):
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    cancha_id = request.GET.get('cancha')
+
+    reservas = Reserva.objects.filter(estado='A')
+
+    # ✅ Validaciones seguras
+    if fecha_inicio and fecha_inicio.lower() != "none":
+        reservas = reservas.filter(fecha__gte=fecha_inicio)
+    if fecha_fin and fecha_fin.lower() != "none":
+        reservas = reservas.filter(fecha__lte=fecha_fin)
+    if cancha_id and cancha_id.lower() != "none" and cancha_id != "":
+        reservas = reservas.filter(cancha_id=cancha_id)
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # 🧾 Título
+    elements.append(Paragraph("Reporte de Ingresos - CanchaYa", styles['Title']))
+    elements.append(Spacer(1, 12))
+
+    # 🧮 Encabezado de tabla
+    data = [['Fecha', 'Cancha', 'Usuario', 'Subtotal', 'Descuento', 'Total']]
+
+    for r in reservas:
+        data.append([
+            str(r.fecha),
+            r.cancha.nombre,
+            f"{r.usuario.nombre} {r.usuario.apellido}",
+            f"${r.subtotal:,}",
+            f"${r.descuento:,}",
+            f"${r.total:,}",
+        ])
+
+    # 🧱 Tabla PDF
+    table = Table(data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#198754")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.whitesmoke, colors.lightgrey]),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="reporte_ingresos.pdf"'
+    response.write(pdf)
+    return response
+
+def centro_reportes(request):
+    return render(request, 'core/centro_reportes.html')
+
+def reportes_ocupaciones(request):
+    return render(request, 'core/centro_reportes.html')
+
 
 def centroGestion(request):
     return render(request, 'core/centroGestion.html')

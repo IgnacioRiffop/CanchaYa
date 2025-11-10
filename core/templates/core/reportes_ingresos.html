@@ -1,0 +1,211 @@
+{% extends 'core/base.html' %}
+{% block title %}Reportes de Ingresos | CanchaYa{% endblock %}
+
+{% block contenido %}
+<div class="container py-5">
+
+  <!-- 🧾 Título -->
+  <h2 class="text-center fw-bold mb-4">Reporte de Ingresos</h2>
+
+  <div class="d-flex justify-content-center gap-2 mb-3">
+  <a href="{% url 'exportar_ingresos_excel' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}&cancha={{ cancha_id }}" 
+     class="btn btn-outline-success">
+    📊 Exportar a Excel
+  </a>
+  <a href="{% url 'exportar_ingresos_pdf' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}&cancha={{ cancha_id }}" 
+     class="btn btn-outline-danger">
+    📄 Exportar a PDF
+  </a>
+  </div>
+
+  <!-- 🔍 Filtros -->
+  <form method="GET" class="filter-bar d-flex justify-content-center align-items-center gap-3 flex-wrap mb-5">
+    <input type="date" name="fecha_inicio" class="form-control filter-input"
+           value="{{ fecha_inicio }}" placeholder="Desde">
+    <input type="date" name="fecha_fin" class="form-control filter-input"
+           value="{{ fecha_fin }}" placeholder="Hasta">
+
+    <select name="cancha" class="form-select filter-input">
+      <option value="">Todas las canchas</option>
+      {% for c in canchas %}
+        <option value="{{ c.id_cancha }}" {% if cancha_id == c.id_cancha|stringformat:"s" %}selected{% endif %}>
+          {{ c.nombre }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-success btn-lg px-4">Filtrar</button>
+  </form>
+
+  <!-- 📈 Resumen general -->
+  <div class="card shadow-sm mb-5 rounded-4">
+    <div class="card-body">
+      <h5 class="fw-bold mb-3 text-success">Resumen general</h5>
+      <div class="row text-center">
+        <div class="col-md-3 col-6 mb-3">
+          <h6 class="text-muted mb-1">Ingresos Totales</h6>
+          <p class="fw-bold fs-5 text-dark">${{ resumen.total_ingresos|default:0 }}</p>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+          <h6 class="text-muted mb-1">Descuentos</h6>
+          <p class="fw-bold fs-5 text-dark">${{ resumen.total_descuentos|default:0 }}</p>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+          <h6 class="text-muted mb-1">Subtotal</h6>
+          <p class="fw-bold fs-5 text-dark">${{ resumen.total_subtotal|default:0 }}</p>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+          <h6 class="text-muted mb-1">Reservas</h6>
+          <p class="fw-bold fs-5 text-dark">{{ resumen.cantidad_reservas|default:0 }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- 📊 Gráficos -->
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm rounded-4">
+        <div class="card-body">
+          <h5 class="fw-bold text-success mb-3 text-center">Ingresos por Cancha</h5>
+          <canvas id="chartIngresos"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm rounded-4">
+        <div class="card-body">
+          <h5 class="fw-bold text-success mb-3 text-center">Distribución de Reservas</h5>
+          <canvas id="chartReservas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const labels = [{% for item in ingresos_por_cancha %}"{{ item.cancha__nombre }}",{% endfor %}];
+    const ingresos = [{% for item in ingresos_por_cancha %}{{ item.ingresos }},{% endfor %}];
+    const reservas = [{% for item in ingresos_por_cancha %}{{ item.reservas }},{% endfor %}];
+
+    // 🎯 Gráfico de barras - Ingresos
+    new Chart(document.getElementById('chartIngresos'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Ingresos ($)',
+          data: ingresos,
+          backgroundColor: 'rgba(25, 135, 84, 0.7)',
+          borderColor: '#198754',
+          borderWidth: 1,
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+
+    // 🥧 Gráfico de torta - Reservas
+    new Chart(document.getElementById('chartReservas'), {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Reservas',
+          data: reservas,
+          backgroundColor: [
+            '#198754', '#20c997', '#6f42c1', '#0d6efd', '#ffc107', '#dc3545'
+          ],
+          borderColor: '#fff',
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }
+    });
+  });
+</script>
+
+  <!-- 🏟️ Ingresos por cancha -->
+  <div class="card shadow-sm rounded-4 mb-4">
+    <div class="card-body">
+      <h5 class="fw-bold text-success mb-3">Ingresos por Cancha</h5>
+      <table class="table table-striped align-middle">
+        <thead class="table-success">
+          <tr>
+            <th>Cancha</th>
+            <th>Reservas</th>
+            <th>Ingresos Totales</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in ingresos_por_cancha %}
+            <tr>
+              <td class="fw-semibold">{{ item.cancha__nombre }}</td>
+              <td>{{ item.reservas }}</td>
+              <td>${{ item.ingresos }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="3" class="text-center text-muted">No hay datos disponibles en este rango.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 📋 Detalle de reservas -->
+  <div class="card shadow-sm rounded-4 mb-5">
+    <div class="card-body">
+      <h5 class="fw-bold text-success mb-3">Detalle de Reservas</h5>
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Fecha</th>
+            <th>Cancha</th>
+            <th>Usuario</th>
+            <th>Subtotal</th>
+            <th>Descuento</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in reservas %}
+            <tr>
+              <td>{{ r.fecha }}</td>
+              <td>{{ r.cancha.nombre }}</td>
+              <td>{{ r.usuario.nombre }} {{ r.usuario.apellido }}</td>
+              <td>${{ r.subtotal }}</td>
+              <td>${{ r.descuento }}</td>
+              <td class="fw-bold text-success">${{ r.total }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-muted">No se encontraron reservas en este rango.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% endblock %}
