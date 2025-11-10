@@ -35,6 +35,9 @@ urlpatterns = [
     path('crudOperadores/', views.crudOperadores, name='crudOperadores'),
     path('crudAdministradores/', views.crudAdministradores, name='crudAdministradores'),
     path('crudUsuarios/', views.crudUsuarios, name='crudUsuarios'),
+    path('usuarios/<int:id_usuario>/editar/', login_required(views.usuario_edit, login_url='login'), name='usuario_edit'),
+    path('usuarios/<int:id_usuario>/eliminar/', login_required(views.usuario_delete, login_url='login'), name='usuario_delete'),
+
     path('crudCanchas/', views.crudCanchas, name='crudCanchas'),
     path('canchas/agregar/', views.cancha_create, name='cancha_add'),
     path('canchas/<int:pk>/editar/', views.cancha_edit, name='cancha_edit'),

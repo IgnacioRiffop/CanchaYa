@@ -18,44 +18,46 @@
 
   <!-- Grid de tarjetas -->
   <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
-    <!-- Item demo 1 -->
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Francisco Riffo Bravo</h5>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
-    </div>
+    {% if usuarios %}
+      {% for usuario in usuarios %}
+        <div class="col">
+          <div class="cu-item-card h-100 d-flex flex-column">
+            <div class="cu-item-body">
+              <h5 class="mb-1 fw-bold">
+                {{ usuario.nombre }} {{ usuario.apellido }}
+              </h5>
+              <p class="mb-0 text-muted small">
+                {{ usuario.email }}
+              </p>
+            </div>
+            <div class="mt-auto d-flex gap-2 pt-3">
+              <!-- Modificar -->
+              <a href="{% url 'usuario_edit' usuario.id_usuario %}"
+                 class="btn btn-outline-secondary btn-sm flex-fill">
+                Modificar
+              </a>
 
-    <!-- Item demo 2 -->
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">David Vera Galvez</h5>
+              <!-- Eliminar (POST) -->
+              <form action="{% url 'usuario_delete' usuario.id_usuario %}"
+                    method="post"
+                    class="flex-fill m-0"
+                    onsubmit="return confirm('¿Seguro que quieres eliminar este usuario?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                  Eliminar
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Item demo 3 -->
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Ignacio Gonzalez Toro</h5>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+      {% endfor %}
+    {% else %}
+      <div class="col">
+        <div class="alert alert-secondary w-100 text-center">
+          No hay usuarios registrados.
         </div>
       </div>
-    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

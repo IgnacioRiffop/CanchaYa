@@ -941,8 +941,68 @@ def crudAdministradores(request):
     return render(request, 'core/crudAdministradores.html')
 
 
+@login_required
 def crudUsuarios(request):
-    return render(request, 'core/crudUsuarios.html')
+    usuarios = Usuario.objects.all().order_by('id_usuario')
+    return render(request, 'core/crudUsuarios.html', {'usuarios': usuarios})
+
+@login_required
+def usuario_edit(request, id_usuario):
+    usuario = get_object_or_404(Usuario, id_usuario=id_usuario)
+    old_email = usuario.email  # por si cambia el correo
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        apellido = request.POST.get('apellido', '').strip()
+        email = request.POST.get('email', '').strip()
+
+        if not nombre or not apellido or not email:
+            messages.error(request, 'Todos los campos son obligatorios.')
+            return redirect('usuario_edit', id_usuario=id_usuario)
+
+        with transaction.atomic():
+            # actualizamos en tabla USUARIO (Oracle)
+            usuario.nombre = nombre
+            usuario.apellido = apellido
+            usuario.email = email
+            usuario.save()
+
+            # sincronizar también con auth_user
+            user = User.objects.filter(email=old_email).first()
+            if user:
+                user.first_name = nombre
+                user.last_name = apellido
+                user.email = email
+                user.username = email  # porque tú usas el correo como username
+                user.save()
+
+        messages.success(request, 'Usuario modificado correctamente.')
+        return redirect('crudUsuarios')
+
+    # GET -> mostrar formulario
+    return render(request, 'core/usuario_form.html', {'usuario': usuario})
+
+
+@login_required
+def usuario_delete(request, id_usuario):
+    usuario = get_object_or_404(Usuario, id_usuario=id_usuario)
+    old_email = usuario.email
+
+    if request.method == 'POST':
+        with transaction.atomic():
+            # borrar auth_user si existe
+            user = User.objects.filter(email=old_email).first()
+            if user:
+                user.delete()
+
+            # borrar en tabla USUARIO
+            usuario.delete()
+
+        messages.success(request, 'Usuario eliminado correctamente.')
+        return redirect('crudUsuarios')
+
+    # si alguien entra por GET, lo mandamos de vuelta
+    return redirect('crudUsuarios')
 
 def crudReservas(request):
     return render(request, 'core/crudReservas.html')
