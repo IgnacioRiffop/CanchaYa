@@ -1,0 +1,163 @@
+{% extends 'core/base.html' %}
+{% block title %}Reporte de Ocupaciones | CanchaYa{% endblock %}
+
+{% block contenido %}
+<div class="container py-5">
+
+  <!-- 🧾 Título -->
+  <h2 class="text-center fw-bold mb-4">Reporte de Ocupaciones</h2>
+
+  <div class="d-flex justify-content-center gap-2 mb-3">
+  <a href="{% url 'exportar_ocupaciones_excel' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}&cancha={{ cancha_id }}" 
+     class="btn btn-outline-success">
+    📊 Exportar a Excel
+  </a>
+  <a href="{% url 'exportar_ocupaciones_pdf' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}&cancha={{ cancha_id }}" 
+     class="btn btn-outline-danger">
+    📄 Exportar a PDF
+  </a>
+</div>
+
+  <!-- 🔍 Filtros -->
+  <form method="GET" class="filter-bar d-flex justify-content-center align-items-center gap-3 flex-wrap mb-5">
+    <input type="date" name="fecha_inicio" class="form-control filter-input"
+           value="{{ fecha_inicio }}" placeholder="Desde">
+    <input type="date" name="fecha_fin" class="form-control filter-input"
+           value="{{ fecha_fin }}" placeholder="Hasta">
+
+    <select name="cancha" class="form-select filter-input">
+      <option value="">Todas las canchas</option>
+      {% for c in canchas %}
+        <option value="{{ c.id_cancha }}" {% if cancha_id == c.id_cancha|stringformat:"s" %}selected{% endif %}>
+          {{ c.nombre }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-primary btn-lg px-4">Filtrar</button>
+  </form>
+
+  <!-- 📈 Resumen general -->
+  <div class="card shadow-sm mb-5 rounded-4">
+    <div class="card-body">
+      <h5 class="fw-bold mb-3 text-primary">Resumen general</h5>
+      <div class="row text-center">
+        <div class="col-md-4 col-6 mb-3">
+          <h6 class="text-muted mb-1">Total de Reservas</h6>
+          <p class="fw-bold fs-5 text-dark">{{ resumen.total_reservas|default:0 }}</p>
+        </div>
+        <div class="col-md-4 col-6 mb-3">
+          <h6 class="text-muted mb-1">Canchas Ocupadas (Únicas)</h6>
+          <p class="fw-bold fs-5 text-dark">{{ resumen.canchas_ocupadas|default:0 }}</p>
+        </div>
+        <div class="col-md-4 col-6 mb-3">
+          <h6 class="text-muted mb-1">Días con Reservas</h6>
+          <p class="fw-bold fs-5 text-dark">{{ resumen.dias_ocupados|default:0 }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📊 Gráficos -->
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm rounded-4">
+        <div class="card-body">
+          <h5 class="fw-bold text-primary mb-3 text-center">Reservas por Día de la Semana</h5>
+          <canvas id="chartDias"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm rounded-4">
+        <div class="card-body">
+          <h5 class="fw-bold text-primary mb-3 text-center">Reservas por Horario</h5>
+          <canvas id="chartHoras"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Datos desde el contexto Django
+    const diasLabels = [{% for d in reservas_por_dia %}"{{ d.dia_semana }}",{% endfor %}];
+    const diasData = [{% for d in reservas_por_dia %}{{ d.total }},{% endfor %}];
+
+    const horasLabels = [{% for h in reservas_por_hora %}"{{ h.horario__hora_inicio }}",{% endfor %}];
+    const horasData = [{% for h in reservas_por_hora %}{{ h.total }},{% endfor %}];
+
+    // 📆 Gráfico por día
+    new Chart(document.getElementById('chartDias'), {
+      type: 'bar',
+      data: {
+        labels: diasLabels,
+        datasets: [{
+          label: 'Reservas',
+          data: diasData,
+          backgroundColor: 'rgba(13, 110, 253, 0.7)',
+          borderColor: '#0d6efd',
+          borderWidth: 1,
+          borderRadius: 6
+        }]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    // ⏰ Gráfico por hora
+    new Chart(document.getElementById('chartHoras'), {
+      type: 'line',
+      data: {
+        labels: horasLabels,
+        datasets: [{
+          label: 'Reservas',
+          data: horasData,
+          fill: false,
+          borderColor: '#0d6efd',
+          tension: 0.3,
+          pointBackgroundColor: '#0d6efd'
+        }]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+  });
+</script>
+
+<!-- 📋 Tabla detalle -->
+<div class="card shadow-sm rounded-4 mb-5">
+  <div class="card-body">
+    <h5 class="fw-bold text-primary mb-3">Detalle de Reservas</h5>
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Fecha</th>
+          <th>Cancha</th>
+          <th>Horario</th>
+          <th>Usuario</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reservas %}
+          <tr>
+            <td>{{ r.fecha }}</td>
+            <td>{{ r.cancha.nombre }}</td>
+            <td>{{ r.horario.hora_inicio }} - {{ r.horario.hora_fin }}</td>
+            <td>{{ r.usuario.nombre }} {{ r.usuario.apellido }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="4" class="text-center text-muted">No se encontraron reservas en este rango.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
