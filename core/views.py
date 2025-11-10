@@ -1627,13 +1627,26 @@ def promocion_edit(request, pk):
     return render(request, 'core/promocion_form.html', {'form': form})
 
 
+
 @login_required(login_url='login')
 def promocion_delete(request, pk):
+    """Desactiva una promoción (eliminación lógica)"""
     promocion = get_object_or_404(Promocion, pk=pk)
     if request.method == 'POST':
-        promocion.delete()
+        promocion.activo = False
+        promocion.save()
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
+
+
+@login_required(login_url='login')
+def promocion_activate(request, pk):
+    """Reactivar una promoción desactivada"""
+    promocion = get_object_or_404(Promocion, pk=pk)
+    promocion.activo = True
+    promocion.save()
+    return redirect('crudPromociones')
+
 
 @login_required
 def crudHorarios(request):

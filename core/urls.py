@@ -74,6 +74,7 @@ urlpatterns = [
     path('crudPromociones/agregar/', views.promocion_create, name='promocion_add'),
     path('crudPromociones/<int:pk>/editar/', views.promocion_edit, name='promocion_edit'),
     path('crudPromociones/<int:pk>/eliminar/', views.promocion_delete, name='promocion_delete'),
+    path('crudPromociones/<int:pk>/activar/', views.promocion_activate, name='promocion_activate'),
 
 
 

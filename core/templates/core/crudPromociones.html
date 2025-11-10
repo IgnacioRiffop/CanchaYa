@@ -21,19 +21,31 @@
             <div class="card-body">
               <h5 class="fw-bold text-success mb-2">{{ promo.codigo }}</h5>
               <p class="text-muted mb-1">{{ promo.descripcion }}</p>
-              <p class="mb-1"><strong>% Descuento:</strong> {{ promo.descuento_porcentaje }}%</p>
-              <p class="mb-1"><strong>Descuento fijo:</strong> ${{ promo.descuento_fijo }}</p>
+              <p class="mb-1"><strong>Descuento:</strong> {{ promo.descuento_porcentaje }}%</p>
+              <p class="mb-1"><strong>Descuento fijo:</strong> ${{ promo.descuento_fijo|floatformat:0 }}</p>
               <p class="mb-1"><strong>Activo:</strong> 
                 {% if promo.activo %}
-                  ✅ Sí
+                  Sí
                 {% else %}
-                  ❌ No
+                  No
                 {% endif %}
               </p>
 
               <div class="d-flex gap-2 mt-3">
                 <a href="{% url 'promocion_edit' promo.id_promocion %}" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-                <a href="#" class="btn btn-outline-danger btn-sm flex-fill eliminar-promocion" data-id="{{ promo.id_promocion }}">Eliminar</a>
+
+                {% if promo.activo %}
+                  <a href="#" 
+                     class="btn btn-outline-danger btn-sm flex-fill eliminar-promocion" 
+                     data-id="{{ promo.id_promocion }}">
+                    Desactivar
+                  </a>
+                {% else %}
+                  <a href="{% url 'promocion_activate' promo.id_promocion %}" 
+                     class="btn btn-outline-success btn-sm flex-fill">
+                    Reactivar
+                  </a>
+                {% endif %}
               </div>
             </div>
           </div>
@@ -60,13 +72,13 @@ document.addEventListener('DOMContentLoaded', function() {
       const promoId = this.getAttribute('data-id');
 
       Swal.fire({
-        title: '¿Estás seguro?',
-        text: "Esta promoción será eliminada permanentemente.",
+        title: '¿Desactivar promoción?',
+        text: "La promoción será desactivada, pero no eliminada permanentemente.",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#198754',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, eliminar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, desactivar',
         cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
@@ -80,15 +92,15 @@ document.addEventListener('DOMContentLoaded', function() {
           .then(data => {
             if (data.success) {
               Swal.fire({
-                title: 'Eliminada',
-                text: 'La promoción fue eliminada correctamente.',
+                title: 'Desactivada',
+                text: 'La promoción fue desactivada correctamente.',
                 icon: 'success',
                 confirmButtonColor: '#198754'
               }).then(() => {
                 location.reload();
               });
             } else {
-              Swal.fire('Error', 'No se pudo eliminar la promoción.', 'error');
+              Swal.fire('Error', 'No se pudo desactivar la promoción.', 'error');
             }
           });
         }
@@ -101,9 +113,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
       const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
           cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
           break;
         }
@@ -113,5 +125,4 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
-
 {% endblock %}
