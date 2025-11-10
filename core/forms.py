@@ -1,5 +1,5 @@
 from django import forms
-from .models import Cancha, Tarifa, Horario
+from .models import Cancha, Tarifa, Horario, Promocion
 
 class CanchaForm(forms.ModelForm):
     class Meta:
@@ -32,4 +32,16 @@ class HorarioForm(forms.ModelForm):
         widgets = {
             'hora_inicio': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'hora_fin': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+        }
+
+class PromocionForm(forms.ModelForm):
+    class Meta:
+        model = Promocion
+        fields = ['codigo', 'descripcion', 'descuento_porcentaje', 'descuento_fijo', 'activo']
+        widgets = {
+            'codigo': forms.TextInput(attrs={'class': 'form-control'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'descuento_porcentaje': forms.NumberInput(attrs={'class': 'form-control'}),
+            'descuento_fijo': forms.NumberInput(attrs={'class': 'form-control'}),
+            'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }

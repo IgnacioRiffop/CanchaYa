@@ -1508,8 +1508,46 @@ def tarifa_delete(request, pk):
     return JsonResponse({'success': False})
 
 
+@login_required(login_url='login')
 def crudPromociones(request):
-    return render(request, 'core/crudPromociones.html')
+    promociones = Promocion.objects.all()
+    return render(request, 'core/crudPromociones.html', {'promociones': promociones})
+
+
+@login_required(login_url='login')
+def promocion_create(request):
+    if request.method == 'POST':
+        form = PromocionForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'errors': form.errors})
+    else:
+        form = PromocionForm()
+    return render(request, 'core/promocion_form.html', {'form': form})
+
+
+@login_required(login_url='login')
+def promocion_edit(request, pk):
+    promocion = get_object_or_404(Promocion, pk=pk)
+    if request.method == 'POST':
+        form = PromocionForm(request.POST, instance=promocion)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'errors': form.errors})
+    else:
+        form = PromocionForm(instance=promocion)
+    return render(request, 'core/promocion_form.html', {'form': form})
+
+
+@login_required(login_url='login')
+def promocion_delete(request, pk):
+    promocion = get_object_or_404(Promocion, pk=pk)
+    if request.method == 'POST':
+        promocion.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
 
 @login_required
 def crudHorarios(request):

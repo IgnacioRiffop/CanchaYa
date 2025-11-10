@@ -5,58 +5,113 @@
 
 {% block contenido %}
 <div class="container py-5">
+
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-    <div>
-      <h1 class="h3 fw-bold mb-1">Promociones</h1>
-      <p class="text-muted m-0">Cupones y campañas activas.</p>
-    </div>
-    <a href="#" class="btn btn-success fw-semibold">
+    <h1 class="h3 fw-bold mb-1">Promociones</h1>
+    <a href="{% url 'promocion_add' %}" class="btn btn-success fw-semibold">
       <i class="fa-solid fa-plus me-2"></i> Agregar
     </a>
   </div>
 
-  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Promo Verano 2x1</h5>
-          <small class="text-muted d-block">Código: VERANO2X1</small>
-          <small class="text-muted">Vigencia: 01/12 – 31/01</small>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
-    </div>
+  {% if promociones %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      {% for promo in promociones %}
+        <div class="col">
+          <div class="card shadow-sm rounded-4 p-3">
+            <div class="card-body">
+              <h5 class="fw-bold text-success mb-2">{{ promo.codigo }}</h5>
+              <p class="text-muted mb-1">{{ promo.descripcion }}</p>
+              <p class="mb-1"><strong>% Descuento:</strong> {{ promo.descuento_porcentaje }}%</p>
+              <p class="mb-1"><strong>Descuento fijo:</strong> ${{ promo.descuento_fijo }}</p>
+              <p class="mb-1"><strong>Activo:</strong> 
+                {% if promo.activo %}
+                  ✅ Sí
+                {% else %}
+                  ❌ No
+                {% endif %}
+              </p>
 
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">-20% Lunes</h5>
-          <small class="text-muted d-block">Código: LUNES20</small>
-          <small class="text-muted">Vigencia: Permanente</small>
+              <div class="d-flex gap-2 mt-3">
+                <a href="{% url 'promocion_edit' promo.id_promocion %}" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
+                <a href="#" class="btn btn-outline-danger btn-sm flex-fill eliminar-promocion" data-id="{{ promo.id_promocion }}">Eliminar</a>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
+      {% endfor %}
     </div>
+  {% else %}
+    <div class="alert alert-secondary text-center mt-4">
+      No hay promociones registradas todavía.
+    </div>
+  {% endif %}
 
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Happy Hour Tarde</h5>
-          <small class="text-muted d-block">Código: HHTARDE</small>
-          <small class="text-muted">16:00–18:00</small>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
+
+<!-- SWEETALERT -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const botonesEliminar = document.querySelectorAll('.eliminar-promocion');
+
+  botonesEliminar.forEach(boton => {
+    boton.addEventListener('click', function(e) {
+      e.preventDefault();
+      const promoId = this.getAttribute('data-id');
+
+      Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta promoción será eliminada permanentemente.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/crudPromociones/${promoId}/eliminar/`, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken'),
+            },
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire({
+                title: 'Eliminada',
+                text: 'La promoción fue eliminada correctamente.',
+                icon: 'success',
+                confirmButtonColor: '#198754'
+              }).then(() => {
+                location.reload();
+              });
+            } else {
+              Swal.fire('Error', 'No se pudo eliminar la promoción.', 'error');
+            }
+          });
+        }
+      });
+    });
+  });
+
+  // CSRF helper
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+});
+</script>
+
 {% endblock %}
