@@ -436,7 +436,12 @@ def api_stock_equipamientos(request):
 
 def reserva(request, id_cancha):
     cancha = get_object_or_404(Cancha, pk=id_cancha)
-    equipamientos_disponibles = Equipamiento.objects.filter(tipos_cancha=cancha.tipo_cancha)
+
+    # 🟩 Equipamientos activos asociados al tipo de cancha
+    equipamientos_disponibles = Equipamiento.objects.filter(
+        tipos_cancha=cancha.tipo_cancha,
+        estado=True
+    )
 
     # Fechas mínimas y máximas
     hoy = date.today()
@@ -452,26 +457,31 @@ def reserva(request, id_cancha):
     else:
         fecha_seleccionada = hoy
 
-    # 🟩 Obtener horarios dentro del rango de la cancha
+    # 🟩 Horarios activos dentro del rango de la cancha
     horarios_qs = Horario.objects.filter(
         hora_inicio__gte=cancha.hora_inicio,
-        hora_fin__lte=cancha.hora_fin
+        hora_fin__lte=cancha.hora_fin,
+        estado=True
     ).order_by('hora_inicio')
 
-    # 🟢 Incluir el precio real (según Tarifa o el precio base)
+    # 🟢 Incluir el precio real (según Tarifa activa o el precio base)
     horarios_disponibles = []
     for h in horarios_qs:
-        tarifa = Tarifa.objects.filter(cancha=cancha, horario=h).first()
+        tarifa = Tarifa.objects.filter(
+            cancha=cancha,
+            horario=h,
+            estado=True
+        ).first()
         precio_final = tarifa.precio if tarifa else cancha.precio
 
         horarios_disponibles.append({
             "id_horario": h.id_horario,
             "hora_inicio": h.hora_inicio.strftime("%H:%M"),
             "hora_fin": h.hora_fin.strftime("%H:%M"),
-            "precio": precio_final,  # 🔹 precio por horario
+            "precio": precio_final,
         })
 
-    # 🟩 Obtener horarios ocupados para la fecha seleccionada (solo IDs)
+    # 🟩 Horarios ocupados para la fecha seleccionada (solo reservas activas)
     reservas_ocupadas = Reserva.objects.filter(
         cancha=cancha,
         fecha=fecha_seleccionada,
@@ -479,6 +489,9 @@ def reserva(request, id_cancha):
     ).values_list('horario_id', flat=True)
 
     horarios_ocupados = list(reservas_ocupadas)
+
+    # 🟩 Promociones activas
+    promociones_activas = Promocion.objects.filter(activo=True)
 
     context = {
         'cancha': cancha,
@@ -488,9 +501,11 @@ def reserva(request, id_cancha):
         'fecha_max': fecha_max,
         'fecha_seleccionada': fecha_seleccionada,
         'equipamientos_disponibles': equipamientos_disponibles,
+        'promociones': promociones_activas,
     }
 
     return render(request, 'core/reserva.html', context)
+
 
 
 
