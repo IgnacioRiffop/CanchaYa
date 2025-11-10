@@ -1,0 +1,65 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ modo }} Horario | CanchaYa{% endblock %}
+
+{% block contenido %}
+<div class="container py-5" style="max-width: 600px;">
+
+  <h2 class="fw-bold text-success mb-4">
+    {{ modo }} Horario
+  </h2>
+
+  <div class="card shadow-sm rounded-4">
+    <div class="card-body p-4">
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label">Hora inicio</label>
+          {{ form.hora_inicio }}
+          {% if form.hora_inicio.errors %}
+            <div class="text-danger small">{{ form.hora_inicio.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Hora fin</label>
+          {{ form.hora_fin }}
+          {% if form.hora_fin.errors %}
+            <div class="text-danger small">{{ form.hora_fin.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+          <a href="{% url 'crudHorarios' %}" class="btn btn-outline-secondary">
+            Cancelar
+          </a>
+          <button type="submit" class="btn btn-success">
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Mostrar mensajes de Django como SweetAlert
+  {% if messages %}
+    {% for message in messages %}
+      Swal.fire({
+        icon: '{% if "success" in message.tags %}success{% elif "error" in message.tags %}error{% else %}info{% endif %}',
+        title: '{{ message.tags|capfirst }}',
+        text: '{{ message|escapejs }}',
+      });
+    {% endfor %}
+  {% endif %}
+});
+</script>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ modo }} Tarifa | CanchaYa{% endblock %}
+
+{% block contenido %}
+<div class="container py-5">
+  <h1 class="h3 fw-bold mb-4 text-success">{{ modo }} Tarifa</h1>
+
+  <div class="card shadow-sm rounded-4 p-4">
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label class="form-label">Cancha</label>
+        {{ form.cancha }}
+        {% if form.cancha.errors %}
+          <div class="text-danger small">{{ form.cancha.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Horario</label>
+        {{ form.horario }}
+        {% if form.horario.errors %}
+          <div class="text-danger small">{{ form.horario.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Precio</label>
+        {{ form.precio }}
+        {% if form.precio.errors %}
+          <div class="text-danger small">{{ form.precio.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'crudTarifas' %}" class="btn btn-outline-secondary">
+          Cancelar
+        </a>
+        <button type="submit" class="btn btn-success">
+          {{ modo }} Tarifa
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- SweetAlert2 para mensajes -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    {% if messages %}
+      {% for message in messages %}
+        Swal.fire({
+          icon: '{% if "success" in message.tags %}success{% elif "error" in message.tags %}error{% else %}info{% endif %}',
+          title: '{{ message|escapejs }}',
+          toast: true,
+          position: 'top-end',
+          timer: 3500,
+          timerProgressBar: true,
+          showConfirmButton: false,
+        });
+      {% endfor %}
+    {% endif %}
+  });
+</script>
+{% endblock %}
