@@ -1385,8 +1385,6 @@ def gestionComercial(request):
 def gestionCuentas(request):
     return render(request, 'core/gestionCuentas.html')
 
-def crudOperadores(request):
-    return render(request, 'core/crudOperadores.html')
 
 
 def crudAdministradores(request):
