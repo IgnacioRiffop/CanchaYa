@@ -16,10 +16,6 @@ urlpatterns = [
     path('editar_perfil/', login_required(views.editar_perfil, login_url='login'), name='editar_perfil'),
     path('reserva/<int:id_cancha>/', login_required(views.reserva, login_url='login'), name='reserva'),
     path('reserva/<int:id_reserva>/cancelar/', login_required(views.cancelar_reserva, login_url='login'), name='cancelar_reserva'),
-
-    path('comprobante/', views.comprobante, name='comprobante'),
-    path('cuenta/', login_required(views.cuenta, login_url='login'), name='cuenta'),
-    path('modificarCuenta/', login_required(views.modificarCuenta, login_url='login'), name='modificarCuenta'),
     path('historialReserva/', login_required(views.historialReserva, login_url='login'), name='historialReserva'),
     path('detalleReserva/<int:id_reserva>/', login_required(views.detalleReserva, login_url='login'), name='detalleReserva'),
     path('api/promocion/<str:codigo>/', views.validar_promocion, name='validar_promocion'),

@@ -42,7 +42,9 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from django.contrib.admin.views.decorators import staff_member_required
-
+from django.db import transaction
+from datetime import datetime, date
+from django.core.mail import send_mail
 
 
 
@@ -61,10 +63,6 @@ from django.contrib import messages
 def index(request):
     canchas = Cancha.objects.all()[:2]  # solo las primeras 2
     return render(request,'core/index.html', {'canchas': canchas})
-
-def contacto(request):
-    return render(request, 'core/contacto.html')
-
 
 def login_view(request):
     if request.method == 'POST':
@@ -108,8 +106,6 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'Has cerrado sesión correctamente.')
     return redirect('index')
-
-
 
 
 def registro(request):
@@ -179,6 +175,7 @@ def registro(request):
     else:
         print("ℹ️ Carga inicial del formulario de registro.")
     return render(request, 'core/registro.html')
+
 
 def olvide_contrasena(request):
     if request.method == 'POST':
@@ -454,7 +451,7 @@ def api_stock_equipamientos(request):
 
     return JsonResponse({'equipamientos': data})
 
-
+@login_required
 def reserva(request, id_cancha):
     cancha = get_object_or_404(Cancha, pk=id_cancha)
 
@@ -529,17 +526,7 @@ def reserva(request, id_cancha):
 
 
 
-
-def comprobante(request):
-    return render(request, 'core/comprobante.html')
-
-def cuenta(request):
-    return render(request, 'core/cuenta.html')
-
-def modificarCuenta(request):
-    return render(request, 'core/modificarCuenta.html')
-
-
+@login_required
 def historialReserva(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
@@ -563,6 +550,7 @@ def historialReserva(request):
 
     return render(request, 'core/historialReserva.html', {'reservas': reservas})
 
+@login_required
 def detalleReserva(request, id_reserva):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
@@ -778,11 +766,6 @@ def crear_checkout(request):
         return redirect('reserva', id_cancha=cancha_id)
 
 
-from django.db import transaction
-
-from django.db import transaction
-from datetime import datetime, date
-from django.core.mail import send_mail
 
 def pago_exitoso(request):
     reserva_temp = request.session.get('reserva_temp')
@@ -982,6 +965,7 @@ def obtener_clima(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
     
+@staff_member_required(login_url='index')
 def reportes_ingresos(request):
     # Parámetros de filtro (GET)
     fecha_inicio = request.GET.get('fecha_inicio')
@@ -1024,7 +1008,7 @@ def reportes_ingresos(request):
     return render(request, 'core/reportes_ingresos.html', context)
 
 
-# 🟢 EXPORTAR A EXCEL
+@staff_member_required(login_url='index')
 def exportar_ingresos_excel(request):
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
@@ -1115,7 +1099,7 @@ def exportar_ingresos_excel(request):
     return response
 
 
-# 🟥 EXPORTAR A PDF
+@staff_member_required(login_url='index')
 def exportar_ingresos_pdf(request):
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
@@ -1174,7 +1158,7 @@ def exportar_ingresos_pdf(request):
     response.write(pdf)
     return response
 
-
+@staff_member_required(login_url='index')
 def reportes_ocupaciones(request):
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
@@ -1238,9 +1222,11 @@ def reportes_ocupaciones(request):
 
     return render(request, 'core/reportes_ocupaciones.html', context)
 
+@staff_member_required(login_url='index')
 def centro_reportes(request):
     return render(request, 'core/centro_reportes.html')
 
+@staff_member_required(login_url='index')
 def exportar_ocupaciones_excel(request):
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
@@ -1326,7 +1312,7 @@ def exportar_ocupaciones_excel(request):
     response['Content-Disposition'] = 'attachment; filename="reporte_ocupaciones.xlsx"'
     return response
 
-
+@staff_member_required(login_url='index')
 def exportar_ocupaciones_pdf(request):
     from .models import Reserva
     from django.db.models import Count
@@ -1384,13 +1370,13 @@ def exportar_ocupaciones_pdf(request):
     response.write(pdf)
     return response
 
-
+@staff_member_required(login_url='index')
 def centroGestion(request):
     return render(request, 'core/centroGestion.html')
-
+@staff_member_required(login_url='index')
 def gestionComercial(request):
     return render(request, 'core/gestionComercial.html')
-
+@staff_member_required(login_url='index')
 def gestionCuentas(request):
     return render(request, 'core/gestionCuentas.html')
 
@@ -1571,7 +1557,7 @@ def usuario_edit(request, id_usuario):
     return render(request, 'core/usuario_form.html', {'usuario': usuario})
 
 
-@login_required
+@staff_member_required(login_url='index')
 def usuario_delete(request, id_usuario):
     usuario = get_object_or_404(Usuario, id_usuario=id_usuario)
     old_email = usuario.email
@@ -1592,13 +1578,13 @@ def usuario_delete(request, id_usuario):
     # si alguien entra por GET, lo mandamos de vuelta
     return redirect('crudUsuarios')
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def crudReservas(request):
     reservas = Reserva.objects.select_related('cancha', 'usuario', 'horario', 'promocion').all().order_by('-fecha')
     return render(request, 'core/crudReservas.html', {'reservas': reservas})
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def reserva_create(request):
     if request.method == 'POST':
         form = ReservaForm(request.POST)
@@ -1611,7 +1597,7 @@ def reserva_create(request):
     return render(request, 'core/reserva_form.html', {'form': form})
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def reserva_edit(request, pk):
     reserva = get_object_or_404(Reserva, pk=pk)
     if request.method == 'POST':
@@ -1626,7 +1612,7 @@ def reserva_edit(request, pk):
 
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def reserva_delete(request, pk):
     """Cancela una reserva (eliminación lógica desde el CRUD, con notificación al usuario)"""
     reserva = get_object_or_404(Reserva, pk=pk)
@@ -1645,7 +1631,7 @@ def reserva_delete(request, pk):
     
     return JsonResponse({'success': False})
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def reserva_activate(request, pk):
     """Reactivar una reserva cancelada"""
     reserva = get_object_or_404(Reserva, pk=pk)
@@ -1653,13 +1639,13 @@ def reserva_activate(request, pk):
     reserva.save()
     return redirect('crudReservas')
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def crudEquipamientos(request):
     equipamientos = Equipamiento.objects.prefetch_related('tipos_cancha').all().order_by('nombre')
     return render(request, 'core/crudEquipamientos.html', {'equipamientos': equipamientos})
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def equipamiento_create(request):
     if request.method == 'POST':
         form = EquipamientoForm(request.POST)
@@ -1672,7 +1658,7 @@ def equipamiento_create(request):
     return render(request, 'core/equipamiento_form.html', {'form': form})
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def equipamiento_edit(request, pk):
     equipamiento = get_object_or_404(Equipamiento, pk=pk)
     if request.method == 'POST':
@@ -1686,7 +1672,7 @@ def equipamiento_edit(request, pk):
     return render(request, 'core/equipamiento_form.html', {'form': form})
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def equipamiento_delete(request, pk):
     """Desactiva un equipamiento (eliminación lógica)"""
     equipamiento = get_object_or_404(Equipamiento, pk=pk)
@@ -1697,7 +1683,7 @@ def equipamiento_delete(request, pk):
     return JsonResponse({'success': False})
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def equipamiento_activate(request, pk):
     """Reactivar un equipamiento desactivado"""
     equipamiento = get_object_or_404(Equipamiento, pk=pk)
@@ -1706,13 +1692,13 @@ def equipamiento_activate(request, pk):
     return redirect('crudEquipamientos')
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def crudTarifas(request):
     tarifas = Tarifa.objects.select_related('cancha', 'horario').all()
     return render(request, 'core/crudTarifas.html', {'tarifas': tarifas})
 
 
-@login_required
+@staff_member_required(login_url='index')
 def tarifa_create(request):
     """
     Crear una nueva tarifa.
@@ -1739,7 +1725,7 @@ def tarifa_create(request):
     })
 
 
-@login_required
+@staff_member_required(login_url='index')
 def tarifa_edit(request, pk):
     """
     Editar una tarifa existente.
@@ -1769,7 +1755,7 @@ def tarifa_edit(request, pk):
     })
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def tarifa_delete(request, pk):
     """Desactiva una tarifa (eliminación lógica)"""
     tarifa = get_object_or_404(Tarifa, pk=pk)
@@ -1779,7 +1765,7 @@ def tarifa_delete(request, pk):
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def tarifa_activate(request, pk):
     tarifa = get_object_or_404(Tarifa, pk=pk)
     tarifa.estado = True
@@ -1788,13 +1774,13 @@ def tarifa_activate(request, pk):
 
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def crudPromociones(request):
     promociones = Promocion.objects.all()
     return render(request, 'core/crudPromociones.html', {'promociones': promociones})
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def promocion_create(request):
     if request.method == 'POST':
         form = PromocionForm(request.POST)
@@ -1807,7 +1793,7 @@ def promocion_create(request):
     return render(request, 'core/promocion_form.html', {'form': form})
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def promocion_edit(request, pk):
     promocion = get_object_or_404(Promocion, pk=pk)
     if request.method == 'POST':
@@ -1822,7 +1808,7 @@ def promocion_edit(request, pk):
 
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def promocion_delete(request, pk):
     """Desactiva una promoción (eliminación lógica)"""
     promocion = get_object_or_404(Promocion, pk=pk)
@@ -1833,7 +1819,7 @@ def promocion_delete(request, pk):
     return JsonResponse({'success': False})
 
 
-@login_required(login_url='login')
+@staff_member_required(login_url='index')
 def promocion_activate(request, pk):
     """Reactivar una promoción desactivada"""
     promocion = get_object_or_404(Promocion, pk=pk)
@@ -1842,13 +1828,13 @@ def promocion_activate(request, pk):
     return redirect('crudPromociones')
 
 
-@login_required
+@staff_member_required(login_url='index')
 def crudHorarios(request):
     horarios = Horario.objects.all().order_by('hora_inicio')
     return render(request, 'core/crudHorarios.html', {'horarios': horarios})
 
 
-@login_required
+@staff_member_required(login_url='index')
 def horario_create(request):
     if request.method == 'POST':
         form = HorarioForm(request.POST)
@@ -1865,7 +1851,7 @@ def horario_create(request):
     })
 
 
-@login_required
+@staff_member_required(login_url='index')
 def horario_edit(request, pk):
     horario = get_object_or_404(Horario, id_horario=pk)
     if request.method == 'POST':
@@ -1885,7 +1871,7 @@ def horario_edit(request, pk):
 
 
 
-@login_required
+@staff_member_required(login_url='index')
 def horario_delete(request, pk):
     horario = get_object_or_404(Horario, id_horario=pk)
     if request.method == 'POST':
@@ -1894,20 +1880,20 @@ def horario_delete(request, pk):
     return redirect('crudHorarios')
 
 
-@login_required
+@staff_member_required(login_url='index')
 def horario_activate(request, pk):
     horario = get_object_or_404(Horario, id_horario=pk)
     horario.estado = True
     horario.save()
     return redirect('crudHorarios')
 
-@login_required
+@staff_member_required(login_url='index')
 def crudCanchas(request):
     # Reutilizamos tu nombre de vista, pero ahora enviamos datos reales
     canchas = Cancha.objects.select_related('tipo_cancha').order_by('id_cancha')
     return render(request, 'core/crudCanchas.html', {'canchas': canchas})
 
-@login_required
+@staff_member_required(login_url='index')
 def cancha_create(request):
     if request.method == 'POST':
         form = CanchaForm(request.POST, request.FILES)
@@ -1920,7 +1906,7 @@ def cancha_create(request):
         form = CanchaForm()
     return render(request, 'core/canchas_form.html', {'form': form, 'modo': 'Agregar'})
 
-@login_required
+@staff_member_required(login_url='index')
 def cancha_edit(request, pk):
     cancha = get_object_or_404(Cancha, id_cancha=pk)
     if request.method == 'POST':
@@ -1934,7 +1920,7 @@ def cancha_edit(request, pk):
         form = CanchaForm(instance=cancha)
     return render(request, 'core/canchas_form.html', {'form': form, 'modo': 'Editar', 'cancha': cancha})
 
-@login_required
+@staff_member_required(login_url='index')
 def cancha_delete(request, pk):
     cancha = get_object_or_404(Cancha, id_cancha=pk)
     if request.method == 'POST':
@@ -1944,7 +1930,7 @@ def cancha_delete(request, pk):
     return redirect('crudCanchas')
 
 
-@login_required
+@staff_member_required(login_url='index')
 def cancha_activate(request, pk):
     cancha = get_object_or_404(Cancha, id_cancha=pk)
     cancha.estado = True
