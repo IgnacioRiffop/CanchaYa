@@ -39,7 +39,7 @@ urlpatterns = [
     path('centroGestion/', views.centroGestion, name='centroGestion'),
     path('gestionComercial/', views.gestionComercial, name='gestionComercial'),
     path('gestionCuentas/', views.gestionCuentas, name='gestionCuentas'),
-    path('crudAdministradores/', views.crudAdministradores, name='crudAdministradores'),
+    path('administradores/', views.crudAdministradores, name='crudAdministradores'),
     path('crudUsuarios/', views.crudUsuarios, name='crudUsuarios'),
     path('usuarios/<int:id_usuario>/editar/', login_required(views.usuario_edit, login_url='login'), name='usuario_edit'),
     path('usuarios/<int:id_usuario>/eliminar/', login_required(views.usuario_delete, login_url='login'), name='usuario_delete'),

@@ -1,7 +1,7 @@
 {% extends 'core/base.html' %}
 {% load static %}
 
-{% block title %}Vendedores | CanchaYa{% endblock %}
+{% block title %}Administradores | CanchaYa{% endblock %}
 
 {% block contenido %}
 <div class="container py-5">
@@ -11,50 +11,135 @@
     <div>
       <h1 class="h3 fw-bold mb-1">Administradores</h1>
     </div>
-    <a href="#" class="btn btn-success fw-semibold">
+    <button class="btn btn-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalAgregarAdmin">
       <i class="fa-solid fa-plus me-2"></i> Agregar
-    </a>
+    </button>
   </div>
 
-  <!-- Grid de tarjetas -->
+  <!-- Lista de administradores -->
   <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
-    <!-- Item demo 1 -->
+    {% for admin in administradores %}
     <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
+      <div class="cu-item-card h-100 d-flex flex-column shadow-sm p-4 rounded-4">
         <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Fabian Vera Riffo</h5>
+          <h5 class="mb-1 fw-bold">{{ admin.first_name }} {{ admin.last_name }}</h5>
+          <p class="text-muted small mb-2">{{ admin.email }}</p>
         </div>
         <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+          <button class="btn btn-outline-secondary btn-sm flex-fill"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modalEditarAdmin{{ admin.id }}">Modificar</button>
+          <button class="btn btn-outline-danger btn-sm flex-fill"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modalEliminarAdmin{{ admin.id }}">Eliminar</button>
         </div>
       </div>
     </div>
 
-    <!-- Item demo 2 -->
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Francisco Espinosa Galvez</h5>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+    <!-- Modal Editar -->
+    <div class="modal fade" id="modalEditarAdmin{{ admin.id }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-sm rounded-4">
+          <div class="modal-header bg-secondary text-white rounded-top-4">
+            <h5 class="modal-title fw-bold">Editar Administrador</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="editar_admin" value="1">
+            <input type="hidden" name="admin_id" value="{{ admin.id }}">
+            <div class="modal-body p-4">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Nombre</label>
+                <input type="text" class="form-control" name="nombre" value="{{ admin.first_name }}" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Apellido</label>
+                <input type="text" class="form-control" name="apellido" value="{{ admin.last_name }}" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Correo electrónico</label>
+                <input type="email" class="form-control" name="email" value="{{ admin.email }}" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Nueva contraseña (opcional)</label>
+                <input type="password" class="form-control" name="password" placeholder="Dejar vacío para mantener">
+              </div>
+            </div>
+            <div class="modal-footer border-0">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-secondary fw-bold">Guardar cambios</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
 
-    <!-- Item demo 3 -->
-    <div class="col">
-      <div class="cu-item-card h-100 d-flex flex-column">
-        <div class="cu-item-body">
-          <h5 class="mb-1 fw-bold">Daniel Aravena Toro</h5>
-        </div>
-        <div class="mt-auto d-flex gap-2 pt-3">
-          <a href="#" class="btn btn-outline-secondary btn-sm flex-fill">Modificar</a>
-          <a href="#" class="btn btn-outline-danger btn-sm flex-fill">Eliminar</a>
+    <!-- Modal Eliminar -->
+    <div class="modal fade" id="modalEliminarAdmin{{ admin.id }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-sm rounded-4">
+          <div class="modal-header bg-danger text-white rounded-top-4">
+            <h5 class="modal-title fw-bold">Eliminar Administrador</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="eliminar_admin" value="1">
+            <input type="hidden" name="admin_id" value="{{ admin.id }}">
+            <div class="modal-body p-4">
+              <p>¿Seguro que deseas eliminar a <strong>{{ admin.first_name }} {{ admin.last_name }}</strong>?</p>
+            </div>
+            <div class="modal-footer border-0">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-danger fw-bold">Eliminar</button>
+            </div>
+          </form>
         </div>
       </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if administradores|length == 0 %}
+  <p class="text-center text-muted mt-4">No hay administradores registrados.</p>
+  {% endif %}
+</div>
+
+<!-- Modal Agregar -->
+<div class="modal fade" id="modalAgregarAdmin" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-sm rounded-4">
+      <div class="modal-header bg-success text-white rounded-top-4">
+        <h5 class="modal-title fw-bold">Nuevo Administrador</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="crear_admin" value="1">
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nombre</label>
+            <input type="text" class="form-control" name="nombre" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Apellido</label>
+            <input type="text" class="form-control" name="apellido" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Correo electrónico</label>
+            <input type="email" class="form-control" name="email" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Contraseña</label>
+            <input type="password" class="form-control" name="password" required>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success fw-bold">Guardar</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

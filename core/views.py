@@ -41,7 +41,7 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
-
+from django.contrib.admin.views.decorators import staff_member_required
 
 
 
@@ -66,7 +66,7 @@ def contacto(request):
     return render(request, 'core/contacto.html')
 
 
-def login_view(request): 
+def login_view(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
@@ -74,20 +74,29 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            
-            # Obtener el objeto Usuario de tu tabla Oracle
-            try:
-                usuario = Usuario.objects.get(email=user.email)
-                request.session['usuario_id'] = usuario.id_usuario
-            except Usuario.DoesNotExist:
-                messages.error(request, "No se encontró tu usuario en la base de datos interna.")
-                return redirect('index')
 
-            messages.success(request, f'¡Bienvenido {user.username}! Has iniciado sesión correctamente.')
+            # 🔹 Si es superusuario, no buscar en la tabla Usuario
+            if not user.is_superuser:
+                try:
+                    usuario = Usuario.objects.get(email=user.email)
+                    request.session['usuario_id'] = usuario.id_usuario
+                except Usuario.DoesNotExist:
+                    # Si no existe en tabla Usuario pero no es superuser
+                    messages.warning(request, "No se encontró tu usuario en la base de datos interna.")
+            else:
+                # Superusuario → sin sesión personalizada
+                request.session['usuario_id'] = None
 
+            messages.success(request, f'¡Bienvenido {user.username}!')
 
-            next_url = request.GET.get('next') or request.POST.get('next') or 'index'
-            return redirect(next_url)
+            # 🔹 Redirección inteligente según rol
+            if user.is_superuser:
+                return redirect('/admin/')  # acceso al panel de Django admin
+            elif user.is_staff:
+                return redirect('centroGestion')  # tu panel interno de administración
+            else:
+                return redirect('canchas')  # vista principal del usuario normal
+
         else:
             messages.error(request, 'Correo o contraseña incorrectos.')
             return redirect('index')
@@ -1387,8 +1396,73 @@ def gestionCuentas(request):
 
 
 
+@staff_member_required(login_url='index')
 def crudAdministradores(request):
-    return render(request, 'core/crudAdministradores.html')
+    # 🟢 Crear nuevo administrador
+    if request.method == 'POST' and 'crear_admin' in request.POST:
+        nombre = request.POST.get('nombre', '').strip()
+        apellido = request.POST.get('apellido', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+
+        if not all([nombre, apellido, email, password]):
+            messages.error(request, "Por favor completa todos los campos.")
+            return redirect('crudAdministradores')
+
+        if User.objects.filter(username=email).exists():
+            messages.warning(request, "Ya existe un usuario con ese correo.")
+            return redirect('crudAdministradores')
+
+        try:
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                first_name=nombre,
+                last_name=apellido,
+                password=password
+            )
+            user.is_staff = True
+            user.save()
+
+            messages.success(request, f"Administrador '{nombre} {apellido}' creado correctamente.")
+        except Exception as e:
+            messages.error(request, f"Error al crear administrador: {e}")
+
+        return redirect('crudAdministradores')
+
+    # 🟡 Editar administrador
+    if request.method == 'POST' and 'editar_admin' in request.POST:
+        admin_id = request.POST.get('admin_id')
+        admin = get_object_or_404(User, id=admin_id, is_staff=True)
+
+        admin.first_name = request.POST.get('nombre', '').strip()
+        admin.last_name = request.POST.get('apellido', '').strip()
+        admin.email = request.POST.get('email', '').strip()
+        admin.username = admin.email  # mantener coherencia
+
+        nueva_pass = request.POST.get('password', '').strip()
+        if nueva_pass:
+            admin.set_password(nueva_pass)
+
+        admin.save()
+        messages.success(request, f"Administrador '{admin.first_name} {admin.last_name}' actualizado correctamente.")
+        return redirect('crudAdministradores')
+
+    # 🔴 Eliminar administrador
+    if request.method == 'POST' and 'eliminar_admin' in request.POST:
+        admin_id = request.POST.get('admin_id')
+        admin = get_object_or_404(User, id=admin_id, is_staff=True)
+        nombre = f"{admin.first_name} {admin.last_name}"
+        admin.delete()
+        messages.success(request, f"Administrador '{nombre}' eliminado correctamente.")
+        return redirect('crudAdministradores')
+
+    # 🔹 Listar administradores actuales
+    administradores = User.objects.filter(is_staff=True, is_superuser=False).order_by('first_name')
+
+    return render(request, 'core/crudAdministradores.html', {
+        'administradores': administradores
+    })
 
 
 @login_required

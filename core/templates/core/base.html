@@ -35,16 +35,21 @@
 
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto align-items-center">
-          <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Inicio</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'canchas' %}">Canchas</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'promociones' %}">Promociones</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'contacto' %}">Contacto</a></li>
-
 
           {% if user.is_authenticated %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'centroGestion' %}">Centro de Gestión</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'centro_reportes' %}">Reportes</a></li>
-            <!-- MENÚ DE USUARIO LOGUEADO -->
+            {% if user.is_staff %}
+              <!-- 🔹 ADMINISTRADORES -->
+              <li class="nav-item"><a class="nav-link" href="{% url 'centroGestion' %}">Centro de Gestión</a></li>
+              <li class="nav-item"><a class="nav-link" href="{% url 'centro_reportes' %}">Reportes</a></li>
+            {% else %}
+              <!-- 🔹 USUARIOS NORMALES -->
+              <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Inicio</a></li>
+              <li class="nav-item"><a class="nav-link" href="{% url 'canchas' %}">Canchas</a></li>
+              <li class="nav-item"><a class="nav-link" href="{% url 'promociones' %}">Promociones</a></li>
+              <li class="nav-item"><a class="nav-link" href="{% url 'contacto' %}">Contacto</a></li>
+            {% endif %}
+
+            <!-- 🔹 MENÚ DE USUARIO LOGUEADO -->
             <li class="nav-item dropdown ms-3">
               <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <span class="fw-semibold text-white">
@@ -52,9 +57,11 @@
                 </span>
               </a>
               <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4 mt-2">
-                <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fa-solid fa-user me-2 text-success"></i>Mi perfil</a></li>
-                <li><a class="dropdown-item" href="{% url 'historialReserva' %}"><i class="fa-solid fa-calendar-check me-2 text-success"></i>Mis reservas</a></li>
-                <li><hr class="dropdown-divider"></li>
+                {% if not user.is_staff %}
+                  <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fa-solid fa-user me-2 text-success"></i>Mi perfil</a></li>
+                  <li><a class="dropdown-item" href="{% url 'historialReserva' %}"><i class="fa-solid fa-calendar-check me-2 text-success"></i>Mis reservas</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                {% endif %}
                 <li>
                   <form action="{% url 'logout' %}" method="POST" class="d-inline">
                     {% csrf_token %}
@@ -65,7 +72,13 @@
                 </li>
               </ul>
             </li>
+
           {% else %}
+            <!-- 🔹 VISITANTES (NO LOGUEADOS) -->
+            <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Inicio</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'canchas' %}">Canchas</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'promociones' %}">Promociones</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'contacto' %}">Contacto</a></li>
             <li class="nav-item ms-2">
               <button class="btn btn-light btn-sm text-success fw-bold px-3" data-bs-toggle="modal" data-bs-target="#loginModal">
                 Iniciar Sesión
