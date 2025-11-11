@@ -1465,9 +1465,73 @@ def crudAdministradores(request):
     })
 
 
-@login_required
+@staff_member_required(login_url='index')
 def crudUsuarios(request):
+    # 🟢 Crear nuevo usuario
+    if request.method == 'POST' and 'crear_usuario' in request.POST:
+        nombre = request.POST.get('nombre', '').strip()
+        apellido = request.POST.get('apellido', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+
+        if not all([nombre, apellido, email, password]):
+            messages.error(request, "Por favor completa todos los campos.")
+            return redirect('crudUsuarios')
+
+        if Usuario.objects.filter(email=email).exists():
+            messages.warning(request, "Ya existe un usuario con ese correo.")
+            return redirect('crudUsuarios')
+
+        try:
+            ultimo = Usuario.objects.all().order_by('-id_usuario').first()
+            next_id = 1 if not ultimo else ultimo.id_usuario + 1
+
+            Usuario.objects.create(
+                id_usuario=next_id,
+                nombre=nombre,
+                apellido=apellido,
+                email=email,
+                password=make_password(password),
+                activo=True
+            )
+            messages.success(request, f"Usuario '{nombre} {apellido}' creado correctamente.")
+        except Exception as e:
+            messages.error(request, f"Error al crear usuario: {e}")
+
+        return redirect('crudUsuarios')
+
+    # 🟡 Editar usuario
+    if request.method == 'POST' and 'editar_usuario' in request.POST:
+        usuario_id = request.POST.get('usuario_id')
+        usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+
+        usuario.nombre = request.POST.get('nombre', '').strip()
+        usuario.apellido = request.POST.get('apellido', '').strip()
+        usuario.email = request.POST.get('email', '').strip()
+
+        nueva_pass = request.POST.get('password', '').strip()
+        if nueva_pass:
+            usuario.password = make_password(nueva_pass)
+
+        usuario.save()
+        messages.success(request, f"Usuario '{usuario.nombre} {usuario.apellido}' actualizado correctamente.")
+        return redirect('crudUsuarios')
+
+    # 🔴 Desactivar / Activar usuario (eliminación lógica)
+    if request.method == 'POST' and 'toggle_usuario' in request.POST:
+        usuario_id = request.POST.get('usuario_id')
+        usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+
+        usuario.activo = not usuario.activo
+        usuario.save()
+
+        estado = "activado" if usuario.activo else "desactivado"
+        messages.success(request, f"Usuario '{usuario.nombre} {usuario.apellido}' fue {estado} correctamente.")
+        return redirect('crudUsuarios')
+
+    # 🔹 Listar todos los usuarios
     usuarios = Usuario.objects.all().order_by('id_usuario')
+
     return render(request, 'core/crudUsuarios.html', {'usuarios': usuarios})
 
 @login_required

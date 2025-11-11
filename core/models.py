@@ -95,6 +95,7 @@ class Usuario(models.Model):
     apellido = models.CharField(max_length=50)
     email = models.EmailField(max_length=100, unique=True)
     password = models.CharField(db_column='pass', max_length=100)
+    activo = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'usuario'
