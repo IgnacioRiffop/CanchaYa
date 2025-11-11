@@ -50,7 +50,9 @@ def contacto(request):
     return render(request, 'core/contacto.html')
 
 def promociones(request):
-    return render(request, 'core/promociones.html')
+    """Muestra las promociones activas a los usuarios"""
+    promociones = Promocion.objects.filter(activo=True)
+    return render(request, 'core/promociones.html', {'promociones': promociones})
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
@@ -63,8 +65,6 @@ def index(request):
 def contacto(request):
     return render(request, 'core/contacto.html')
 
-def promociones(request):
-    return render(request, 'core/promociones.html')
 
 def login_view(request): 
     if request.method == 'POST':
