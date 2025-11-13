@@ -17,7 +17,71 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
+// 🔹 Cargar SOLO horarios disponibles según cancha + fecha en el CRUD
+document.addEventListener('DOMContentLoaded', function () {
+  const canchaSelect  = document.getElementById('id_cancha');
+  const fechaInput    = document.getElementById('id_fecha');
+  const horarioSelect = document.getElementById('id_horario');
+
+  // ID de la reserva si estamos editando (en crear viene vacío)
+  const reservaId = "{{ form.instance.id_reserva|default:'' }}";
+  const apiUrl = "{% url 'api_horarios_disponibles_admin' %}";
+
+  function cargarHorariosDisponibles() {
+    const cancha = canchaSelect ? canchaSelect.value : '';
+    const fecha  = fechaInput ? fechaInput.value : '';
+
+    if (!cancha || !fecha || !horarioSelect) {
+      return;
+    }
+
+    let url = `${apiUrl}?cancha_id=${cancha}&fecha=${fecha}`;
+    if (reservaId) {
+      url += `&reserva_id=${reservaId}`;
+    }
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          console.error(data.error);
+          return;
+        }
+
+        // Limpia el select
+        horarioSelect.innerHTML = '';
+
+        // Opción vacía
+        const optEmpty = document.createElement('option');
+        optEmpty.value = '';
+        optEmpty.textContent = '---------';
+        horarioSelect.appendChild(optEmpty);
+
+        // Agregar horarios disponibles
+        data.horarios.forEach(h => {
+          const opt = document.createElement('option');
+          opt.value = h.id;
+          opt.textContent = h.label;
+          horarioSelect.appendChild(opt);
+        });
+      })
+      .catch(err => {
+        console.error('Error cargando horarios disponibles:', err);
+      });
+  }
+
+  if (canchaSelect) canchaSelect.addEventListener('change', cargarHorariosDisponibles);
+  if (fechaInput)   fechaInput.addEventListener('change', cargarHorariosDisponibles);
+
+  // Si ya hay cancha + fecha (por ejemplo al editar), cargar al entrar
+  if (canchaSelect && fechaInput && canchaSelect.value && fechaInput.value) {
+    cargarHorariosDisponibles();
+  }
+});
+
+// 🔹 Submit AJAX + SweetAlert (lo dejamos tal cual lo tenías)
 document.querySelector('#reservaForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const formData = new FormData(this);

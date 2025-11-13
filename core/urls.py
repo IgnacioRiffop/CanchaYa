@@ -82,4 +82,5 @@ urlpatterns = [
     path('crudHorarios/<int:pk>/eliminar/', views.horario_delete, name='horario_delete'),
     path('crudHorarios/<int:pk>/activar/', views.horario_activate, name='horario_activate'),
 
+    path('api/horarios_disponibles_admin/', views.api_horarios_disponibles_admin, name='api_horarios_disponibles_admin'),
 ]

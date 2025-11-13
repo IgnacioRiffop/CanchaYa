@@ -10,6 +10,7 @@ from django.db import transaction
 from core.models import Usuario
 from django.http import JsonResponse
 import re
+from django.views.decorators.http import require_GET
 from .forms import *
 from .models import *
 from django.core.paginator import Paginator
@@ -61,8 +62,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 
 def index(request):
-    canchas = Cancha.objects.all()[:2]  # solo las primeras 2
-    return render(request,'core/index.html', {'canchas': canchas})
+    # Todas las canchas activas
+    canchas = Cancha.objects.filter(estado=True)
+    return render(request, 'core/index.html', {'canchas': canchas})
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -1977,3 +1980,55 @@ El equipo de CanchaYa 💚
         print(f"✅ [MAIL] Correo de reserva cancelada enviado a {usuario.email}")
     except Exception as e:
         print(f"❌ [MAIL] Error al enviar correo de reserva cancelada: {e}")
+
+
+
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from datetime import datetime
+
+@staff_member_required(login_url='index')
+def api_horarios_disponibles_admin(request):
+    cancha_id = request.GET.get('cancha_id')
+    fecha_str = request.GET.get('fecha')
+    reserva_id = request.GET.get('reserva_id')  # opcional (cuando se edita)
+
+    if not cancha_id or not fecha_str:
+        return JsonResponse({'error': 'Faltan parámetros.'}, status=400)
+
+    try:
+        fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({'error': 'Fecha inválida.'}, status=400)
+
+    # ⛔ Reservas ocupadas para esa cancha y fecha (solo ACTIVAS)
+    reservas_qs = Reserva.objects.filter(
+        cancha_id=cancha_id,
+        fecha=fecha,
+        estado='A'
+    )
+
+    # 👉 Si estoy editando una reserva, NO la considero como "ocupada"
+    if reserva_id:
+        reservas_qs = reservas_qs.exclude(id_reserva=reserva_id)
+
+    horarios_ocupados_ids = reservas_qs.values_list('horario_id', flat=True)
+
+    # ✅ Todos los horarios activos (sin limitar por rango de la cancha,
+    # para evitar que se quede vacío por algún dato raro)
+    horarios_qs = Horario.objects.filter(estado=True).order_by('hora_inicio')
+
+    horarios_disponibles = []
+    for h in horarios_qs:
+        # saltar si está ocupado por OTRA reserva
+        if h.id_horario in horarios_ocupados_ids:
+            continue
+
+        horarios_disponibles.append({
+            'id': h.id_horario,
+            'label': f'{h.hora_inicio.strftime("%H:%M")} - {h.hora_fin.strftime("%H:%M")}',
+        })
+
+    return JsonResponse({'horarios': horarios_disponibles})
