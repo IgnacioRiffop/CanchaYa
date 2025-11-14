@@ -110,6 +110,8 @@ def logout_view(request):
     messages.success(request, 'Has cerrado sesión correctamente.')
     return redirect('index')
 
+from django.urls import reverse
+
 
 def registro(request):
     if request.method == 'POST':
@@ -136,6 +138,7 @@ def registro(request):
             return redirect('registro')
 
         try:
+            # 💾 1) Crear usuario en ambas tablas dentro de una transacción
             with transaction.atomic():
                 print("🚀 Creando usuario en Django auth_user...")
                 user = User.objects.create_user(
@@ -152,7 +155,7 @@ def registro(request):
                 next_id = 1
                 ultimo = Usuario.objects.all().order_by('-id_usuario').first()
                 if ultimo:
-                    next_id = ultimo.id_usuario + 1
+                    next_id = ultimo.id_usuario + 2
 
                 print(f"🧮 Próximo ID asignado: {next_id}")
 
@@ -165,6 +168,110 @@ def registro(request):
                 )
                 print("✅ Registro insertado correctamente en tabla USUARIO.")
 
+            # ✉️ 2) Enviar correo de bienvenida (fuera del atomic para no romper el registro)
+            try:
+                url_inicio = request.build_absolute_uri(reverse('index'))
+
+                asunto = f"¡Bienvenido a CanchaYa, {nombre}!"
+
+                mensaje_texto = f"""
+Hola {nombre},
+
+¡Te damos la bienvenida a CanchaYa! ⚽
+
+Desde ahora puedes reservar canchas, revisar tus reservas y aprovechar
+promociones para tus próximos partidos.
+
+Ingresa a CanchaYa aquí:
+{url_inicio}
+
+Si tú no creaste esta cuenta, puedes ignorar este mensaje.
+
+El equipo de CanchaYa 💚
+"""
+
+                mensaje_html = f"""
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Bienvenido a CanchaYa</title>
+</head>
+<body style="background-color:#f5f5f5; font-family:Arial,Helvetica,sans-serif; margin:0; padding:0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5; padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,.06);">
+          <tr>
+            <td style="background-color:#198754; padding:20px 32px; color:#ffffff;">
+              <h1 style="margin:0; font-size:24px;">Bienvenido a <span style="font-weight:bold;">CanchaYa</span></h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 32px; color:#333333; font-size:15px; line-height:1.6;">
+              <p style="margin:0 0 12px;">Hola <strong>{nombre} {apellido}</strong>,</p>
+              <p style="margin:0 0 12px;">
+                Gracias por crear tu cuenta en <strong>CanchaYa</strong>. Desde ahora puedes reservar canchas,
+                gestionar tus horarios y disfrutar tus partidos con amigos de forma rápida y sencilla.
+              </p>
+
+              <p style="margin:0 0 12px;">Con tu cuenta podrás:</p>
+              <ul style="margin:0 0 16px 18px; padding:0;">
+                <li>Reservar canchas en distintos recintos deportivos.</li>
+                <li>Revisar el detalle y estado de tus reservas.</li>
+                <li>Agregar equipamiento adicional a tus partidos.</li>
+                <li>Aprovechar promociones y descuentos disponibles.</li>
+              </ul>
+
+              <p style="margin:0 0 20px;">
+                Te invitamos a ingresar y hacer tu primera reserva:
+              </p>
+
+              <p style="text-align:center; margin:0 0 24px;">
+                <a href="{url_inicio}" 
+                   style="background-color:#198754; color:#ffffff; text-decoration:none;
+                          padding:12px 28px; border-radius:999px; display:inline-block;
+                          font-weight:bold; font-size:15px;">
+                  Ir a CanchaYa
+                </a>
+              </p>
+
+              <p style="margin:0 0 12px;">
+                Si tú no creaste esta cuenta, puedes ignorar este correo.
+              </p>
+
+              <p style="margin:0;">
+                Un abrazo,<br>
+                El equipo de <strong>CanchaYa</strong> 💚
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#f0f0f0; padding:12px 32px; text-align:center; color:#888888; font-size:12px;">
+              <p style="margin:0;">Este es un mensaje automático, por favor no respondas a este correo.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
+
+                send_mail(
+                    asunto,
+                    mensaje_texto,                # versión texto plano
+                    'canchasya.duoc@gmail.com',   # remitente
+                    [email],                      # destinatario
+                    fail_silently=False,
+                    html_message=mensaje_html,    # versión HTML bonita
+                )
+                print(f"✅ [INFO] Correo de bienvenida enviado a {email}")
+            except Exception as e:
+                print(f"⚠️ [WARN] No se pudo enviar el correo de bienvenida: {e}")
+
+            # 3) Mensaje en la web
             messages.success(request, 'Cuenta creada exitosamente. ¡Ya puedes iniciar sesión!')
             print("🎉 [ÉXITO] Usuario creado en ambas tablas correctamente.")
             return redirect('index')
@@ -178,6 +285,7 @@ def registro(request):
     else:
         print("ℹ️ Carga inicial del formulario de registro.")
     return render(request, 'core/registro.html')
+
 
 
 def olvide_contrasena(request):
@@ -570,6 +678,12 @@ def detalleReserva(request, id_reserva):
 
     return render(request, 'core/detalleReserva.html', {'reserva': reserva})
 
+from django.utils import timezone
+from datetime import datetime, time
+
+from django.utils import timezone
+from datetime import datetime
+
 @login_required(login_url='login')
 def cancelar_reserva(request, id_reserva):
     usuario_id = request.session.get('usuario_id')
@@ -577,22 +691,46 @@ def cancelar_reserva(request, id_reserva):
         messages.error(request, "Debes iniciar sesión para cancelar una reserva.")
         return redirect('login')
 
-    # Solo puede cancelar sus propias reservas
     reserva = get_object_or_404(
         Reserva,
         id_reserva=id_reserva,
         usuario_id=usuario_id
     )
 
-    # 👇 Aquí cancelamos directo (sin pantalla intermedia)
-    reserva.estado = 'C'  # Ajusta el valor si usas otro código para cancelada
-    reserva.save()
+    # ⏰ ahora = datetime aware
+    ahora = timezone.now()
 
-    # 💌 Enviar correo de cancelación
+    # fecha + hora_fin (naive)
+    fecha_hora_reserva = datetime.combine(reserva.fecha, reserva.horario.hora_fin)
+
+    # 👉 la volvemos aware con la zona horaria actual
+    if timezone.is_naive(fecha_hora_reserva):
+        fecha_hora_reserva = timezone.make_aware(
+            fecha_hora_reserva,
+            timezone.get_current_timezone()
+        )
+
+    # 🔒 si la reserva ya terminó, no se puede cancelar
+    if fecha_hora_reserva < ahora:
+        messages.error(request, "No puedes cancelar una reserva que ya finalizó.")
+        return redirect('detalle_reserva', id_reserva=id_reserva)
+
+    # ✅ Cancelación permitida
+    reserva.estado = 'C'
+    reserva.save()
     enviar_correo_reserva_cancelada(reserva)
 
     messages.success(request, "Tu reserva fue cancelada correctamente.")
     return redirect('historialReserva')
+
+
+from django.utils import timezone
+from datetime import datetime
+
+@property
+def ya_finalizo(self):
+    fecha_hora = datetime.combine(self.fecha, self.horario.hora_fin)
+    return fecha_hora < timezone.localtime()
 
 def validar_promocion(request, codigo):
     try:

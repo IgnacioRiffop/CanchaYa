@@ -106,6 +106,10 @@ class Usuario(models.Model):
         return f"{self.nombre} {self.apellido}"
 
 
+from django.utils import timezone
+from datetime import datetime
+
+
 class Reserva(models.Model):
     id_reserva = models.BigAutoField(primary_key=True)
     fecha = models.DateField()
@@ -117,7 +121,17 @@ class Reserva(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, db_column='usuario_id_usuario')
     promocion = models.ForeignKey(Promocion, on_delete=models.SET_NULL, db_column='promocion_id_promocion', null=True, blank=True)
     horario = models.ForeignKey(Horario, on_delete=models.CASCADE, db_column='horario_id_horario')
+    @property
+    def ya_finalizo(self):
+        fecha_hora = datetime.combine(self.fecha, self.horario.hora_fin)
 
+        if timezone.is_naive(fecha_hora):
+            fecha_hora = timezone.make_aware(
+                fecha_hora,
+                timezone.get_current_timezone()
+            )
+
+        return fecha_hora < timezone.now()
     class Meta:
         db_table = 'reserva'
         verbose_name = 'Reserva'
